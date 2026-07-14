@@ -1251,67 +1251,22 @@ function revision(){
 
 
 const epaPracticalCriteria=[
-  {
-    name:"Health, safety and PPE",
-    nearly:"Revisit hazard identification, PPE selection and safe working procedures. Explain why each control is required before starting work.",
-    practice:"Complete a pre-start safety check and talk through the relevant RAMS with your assessor.",
-    revision:"Revision → Assignment Quizzes → Assignment 1; Revision → Revision Cards → Health and Safety"
-  },
-  {
-    name:"Interpretation of drawings and specification",
-    nearly:"Practise locating dimensions, materials, bond details and tolerances on drawings before starting work.",
-    practice:"Set out a small wall directly from a drawing and check each dimension with a tape measure.",
-    revision:"Revision → Assignment Quizzes → Assignment 1; Revision → Revision Cards → Drawings and Specifications"
-  },
-  {
-    name:"Setting out and dimensions",
-    nearly:"Improve accuracy by checking overall length, returns and openings with a tape measure before laying and during construction.",
-    practice:"Set out a wall, check the dimensions twice and explain how errors would affect the finished work.",
-    revision:"Revision → Assignment Quizzes → Assignment 1 and 2; Revision → Revision Cards → Setting Out"
-  },
-  {
-    name:"Selection and preparation of materials",
-    nearly:"Review how bricks, blocks, mortar and ancillary materials are selected, checked and prepared for the task.",
-    practice:"Prepare materials for a practical task and explain how you checked suitability and condition.",
-    revision:"Revision → Assignment Quizzes → Assignment 1; Revision → Revision Cards → Materials and Mortar"
-  },
-  {
-    name:"Bond and construction sequence",
-    nearly:"Revise how the selected bond is maintained through corners, returns and junctions without creating continuous perp joints.",
-    practice:"Build a short section containing a corner or return and check the bond before continuing each course.",
-    revision:"Revision → Assignment Quizzes → Assignment 2 and 3; Revision → Revision Cards → Brick Bonds"
-  },
-  {
-    name:"Line, level, plumb and gauge",
-    nearly:"Check line, level, plumb and course heights more frequently. Use a tape measure to monitor height and dimensions as the work progresses.",
-    practice:"Build a six-course wall and record checks for line, level, plumb and overall height.",
-    revision:"Revision → Assignment Quizzes → Assignment 1 and 2; Revision → Revision Cards → Quality Checks"
-  },
-  {
-    name:"Joint finish and presentation",
-    nearly:"Focus on consistent bed and perp joints, correct timing of jointing and keeping the facework clean.",
-    practice:"Complete a sample panel and compare the joint finish across the full wall.",
-    revision:"Revision → Assignment Quizzes → Assignment 1; Revision → Revision Cards → Joint Finishes"
-  },
-  {
-    name:"Quality checks and defect correction",
-    nearly:"Carry out checks throughout the build rather than waiting until the end, and correct small defects before they become larger.",
-    practice:"Inspect a completed wall, identify defects and explain the safest correction method.",
-    revision:"Revision → Assignment Quizzes → Assignment 19; Revision → Revision Cards → Quality and Repairs"
-  },
-  {
-    name:"Time management and organisation",
-    nearly:"Plan the work sequence, prepare tools and materials in advance and maintain a steady pace without reducing quality.",
-    practice:"Plan a practical task into stages and compare planned time with actual completion time.",
-    revision:"Revision → Revision Cards → Planning and Organisation"
-  },
-  {
-    name:"Professional behaviour and communication",
-    nearly:"Practise explaining decisions clearly, asking for clarification when required and maintaining a professional work area.",
-    practice:"Talk through a task with your assessor before starting and explain any changes made during the build.",
-    revision:"Revision → Revision Cards → Communication and Professional Behaviour"
-  }
-];
+  {name:"Health, safety and PPE",nearly:"Revisit hazard identification, PPE selection, safe access, manual handling and housekeeping for the full cavity-wall task.",practice:"Complete a pre-start check and talk through the RAMS before beginning the mock."},
+  {name:"Interpretation of drawings and specification",nearly:"Practise identifying cavity width, opening size, lintel position, cavity tray level, weep-hole spacing, wall-tie spacing and soldier-course details from the drawing.",practice:"Mark all key dimensions and components on the drawing before setting out."},
+  {name:"Setting out and dimensions",nearly:"Improve accuracy when setting out the wall, opening and returns. Check overall length, opening width and positions using a tape measure before laying.",practice:"Set out the complete cavity wall and opening twice before starting the first course."},
+  {name:"First course, line, level, plumb and gauge",nearly:"Check the first course carefully and monitor line, level, plumb and course heights throughout the build using a spirit level and tape measure.",practice:"Build and check the first three courses before continuing the full wall."},
+  {name:"Cavity width and cleanliness",nearly:"Maintain the specified cavity width and keep the cavity clear of mortar droppings and debris.",practice:"Use regular checks across the wall and clean the cavity as the work progresses."},
+  {name:"Wall ties and insulation",nearly:"Review wall-tie spacing, embedment, orientation and placement around openings, and ensure insulation is fitted tightly without gaps.",practice:"Mark tie positions on the build and inspect each course before covering them."},
+  {name:"DPC and cavity tray",nearly:"Review correct positioning, laps, support and protection of the DPC and cavity tray so moisture is directed safely to the outside.",practice:"Dry-fit the DPC and cavity tray and explain the route water should take."},
+  {name:"Weep holes",nearly:"Check that weep holes are correctly positioned above the cavity tray or lintel, evenly spaced and left clear.",practice:"Mark the weep-hole positions before laying the soldier course."},
+  {name:"Lintel installation",nearly:"Review lintel type, level, orientation, bearing and temporary support requirements before continuing above the opening.",practice:"Set and check the lintel using the drawing, tape measure and spirit level."},
+  {name:"Soldier course and opening detail",nearly:"Improve the setting out, alignment, spacing and support of the soldier course above the opening.",practice:"Dry-lay the soldier course first and check symmetry before bedding."},
+  {name:"Bond, perp joints and construction sequence",nearly:"Maintain the selected bond through the wall and around the opening without creating continuous vertical joints.",practice:"Plan the bond around the opening before laying each course."},
+  {name:"Joint finish and presentation",nearly:"Focus on consistent bed and perp joints, correct timing of jointing and keeping the facework clean.",practice:"Complete a sample section and compare the joint finish across the full wall."},
+  {name:"Quality checks and defect correction",nearly:"Carry out checks throughout the build and correct small defects before they affect later work.",practice:"Inspect the completed wall against the drawing and record any corrections made."},
+  {name:"Time management and organisation",nearly:"Plan the sequence of work, prepare materials and components in advance and maintain a steady pace without reducing quality.",practice:"Break the mock into stages and compare planned time with actual time."},
+  {name:"Professional behaviour and communication",nearly:"Explain decisions clearly, ask for clarification where required and maintain a professional, tidy work area.",practice:"Talk through the build sequence and any changes with the assessor."}
+]
 
 const epaDiscussionQuestions=[
   {
@@ -1570,15 +1525,22 @@ async function downloadEpaPracticalMockPdf(record,profile){
     const needs=mark==="Nearly Ready"||mark==="More Practice Required";
     const titleLines=wrapped(`${index+1}. ${criterion.name}`,9,true);
     y=ensure(y,titleLines.length*4+17);
-    pdf.setFillColor(index%2?247:239,index%2?248:242,index%2?250:245);
+    if(mark==="EPA Ready")pdf.setFillColor(226,245,235);
+    else if(mark==="Nearly Ready")pdf.setFillColor(255,244,214);
+    else if(mark==="More Practice Required")pdf.setFillColor(255,226,226);
+    else pdf.setFillColor(index%2?247:239,index%2?248:242,index%2?250:245);
     pdf.roundedRect(margin,y-3,contentW,titleLines.length*4+12,2,2,"F");
+    if(mark==="EPA Ready")pdf.setDrawColor(22,132,91);
+    else if(mark==="Nearly Ready")pdf.setDrawColor(215,155,33);
+    else if(mark==="More Practice Required")pdf.setDrawColor(169,35,35);
+    else pdf.setDrawColor(210,214,220);
+    pdf.roundedRect(margin,y-3,contentW,titleLines.length*4+12,2,2,"S");
     pdf.setFont("helvetica","bold");pdf.setFontSize(9);pdf.text(titleLines,margin+5,y+2);
     pdf.setFontSize(8);pdf.text(`Assessor judgement: ${mark}`,margin+5,y+titleLines.length*4+3);
     y+=titleLines.length*4+16;
     if(needs){
       const improvement=mark==="Nearly Ready"?criterion.nearly:`This area requires further development before EPA. ${criterion.nearly}`;
       y=drawLabelled("Improvement guidance",improvement,y,true);
-      y=drawLabelled("Brick Buddy revision",criterion.revision,y,false);
       y=drawLabelled("Suggested practice",criterion.practice,y,true);
     }
     y+=3;
@@ -1630,8 +1592,16 @@ async function downloadEpaDiscussionMockPdf(record,profile){
     const needs=mark==="Nearly Ready"||mark==="More Practice Required";
     const questionLines=wrapped(`${index+1}. ${item.q}`,9,true);
     y=ensure(y,questionLines.length*4+17);
-    pdf.setFillColor(index%2?247:239,index%2?248:242,index%2?250:245);
+    if(mark==="EPA Ready")pdf.setFillColor(226,245,235);
+    else if(mark==="Nearly Ready")pdf.setFillColor(255,244,214);
+    else if(mark==="More Practice Required")pdf.setFillColor(255,226,226);
+    else pdf.setFillColor(index%2?247:239,index%2?248:242,index%2?250:245);
     pdf.roundedRect(margin,y-3,contentW,questionLines.length*4+12,2,2,"F");
+    if(mark==="EPA Ready")pdf.setDrawColor(22,132,91);
+    else if(mark==="Nearly Ready")pdf.setDrawColor(215,155,33);
+    else if(mark==="More Practice Required")pdf.setDrawColor(169,35,35);
+    else pdf.setDrawColor(210,214,220);
+    pdf.roundedRect(margin,y-3,contentW,questionLines.length*4+12,2,2,"S");
     pdf.setFont("helvetica","bold");pdf.setFontSize(9);pdf.text(questionLines,margin+5,y+2);
     pdf.setFontSize(8);pdf.text(`Assessor judgement: ${mark}`,margin+5,y+questionLines.length*4+3);
     y+=questionLines.length*4+16;
@@ -1640,7 +1610,6 @@ async function downloadEpaDiscussionMockPdf(record,profile){
         ?"You showed a reasonable understanding of this topic, but your explanation would benefit from greater detail, clearer reasoning or stronger examples."
         :"This topic requires further revision and discussion before EPA. Focus on understanding the principles as well as how they apply in the workplace.";
       y=drawLabelled("Feedback",feedback,y,true);
-      y=drawLabelled("Brick Buddy revision",item.revision,y,false);
       y=drawLabelled("Suggested workplace activity",item.workplace,y,true);
     }
     y+=3;
@@ -1660,12 +1629,12 @@ async function downloadEpaDiscussionMockPdf(record,profile){
 function epaPracticalMock(){
   const record=state.epaPracticalMock||{marks:{},comments:"",learnerName:state.profile.learner||"",assessorName:state.profile.assessor||"",date:new Date().toISOString().slice(0,10),task:"",signature:""};
   const options=["","EPA Ready","Nearly Ready","More Practice Required"];
-  view().innerHTML=`<section class="card hero"><span class="eyebrow">PRACTICAL READINESS</span><h2>🧱 EPA Practical Mock</h2><p>Assessor-only mock assessment with automatic improvement guidance.</p></section>
+  view().innerHTML=`<section class="card hero"><span class="eyebrow">PRACTICAL READINESS</span><h2>🧱 EPA Practical Mock</h2><p>Assessor-only cavity-wall mock including setting out, lintel, soldier course, cavity tray, weep holes, wall ties and quality checks.</p></section>
   <section class="card"><div class="grid">
     <label>Learner name<input id="epaPracticalLearner" value="${record.learnerName||""}"></label>
     <label>Assessor name<input id="epaPracticalAssessor" value="${record.assessorName||""}"></label>
     <label>Date<input id="epaPracticalDate" type="date" value="${record.date||new Date().toISOString().slice(0,10)}"></label>
-    <label>Practical task<input id="epaPracticalTask" value="${record.task||""}" placeholder="e.g. Construct a cavity wall"></label>
+    <label>Practical task<input id="epaPracticalTask" value="${record.task||""}" placeholder="Construct a cavity wall with opening, lintel, cavity tray, weep holes, wall ties and soldier course"></label>
   </div></section>
   <section class="card"><h3>Assessor Mark</h3><div class="criteria">${epaPracticalCriteria.map(c=>`<label>${c.name}<select data-epa-practical-mark="${c.name}">${options.map(v=>`<option ${record.marks?.[c.name]===v?"selected":""}>${v}</option>`).join("")}</select></label>`).join("")}</div>
   <label>Assessor feedback and next actions<textarea id="epaPracticalComments">${record.comments||""}</textarea></label></section>
@@ -2521,7 +2490,7 @@ function settings(){
       <button class="primary" id="saveProfile">Save settings</button>
       <button class="secondary" id="backup">Export backup</button>
     </div>
-    <p class="muted" style="text-align:center;margin-top:18px">Brick Buddy • Version 2.2.6</p>
+    <p class="muted" style="text-align:center;margin-top:18px">Brick Buddy • Version 2.2.7</p>
   </section>`;
   const getSignature=setupSignaturePad(
     document.getElementById("learnerSignature"),
