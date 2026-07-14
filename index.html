@@ -1576,9 +1576,19 @@ function evidence(){
   });
 }
 
+
+function formatLearningDuration(value){
+  if(!value)return "";
+  const [hours,minutes]=value.split(":").map(Number);
+  const parts=[];
+  if(hours)parts.push(`${hours} hour${hours===1?"":"s"}`);
+  if(minutes)parts.push(`${minutes} minute${minutes===1?"":"s"}`);
+  return parts.join(" ")||"0 minutes";
+}
+
 function otj(){
   view().innerHTML=`<section class="card"><h2>Off-the-Job Learning</h2>
-    <div class="grid"><label>Activity<select id="otjActivity">${assignments.map(a=>`<option>${a.title}</option>`).join("")}</select></label><label>Learning time<input id="otjHours" placeholder="e.g. 2 hours"></label></div>
+    <div class="grid"><label>Activity<select id="otjActivity">${assignments.map(a=>`<option>${a.title}</option>`).join("")}</select></label><label>Learning time (hours and minutes)<input id="otjHours" type="time" value="01:00" step="300"></label></div>
     <label>Date<input id="otjDate" type="date"></label>
     <label>What did you complete?<textarea id="otjDid"></textarea></label>
     <label>What did you learn?<textarea id="otjLearned"></textarea></label>
@@ -1589,7 +1599,8 @@ function otj(){
   </section><section id="otjResult"></section>`;
   document.getElementById("buildOtj").onclick=()=>{
     const activity=document.getElementById("otjActivity").value;
-    const entry=`${ukDate(document.getElementById("otjDate").value)} — During ${document.getElementById("otjHours").value||"the recorded learning time"} of off-the-job learning, I developed my skills through ${activity.toLowerCase()}. ${sentence(document.getElementById("otjDid").value)||"I completed the practical activity and followed the task information and correct sequence."} ${sentence(document.getElementById("otjLearned").value)||"I improved my knowledge and practical understanding of the task."} ${sentence(document.getElementById("otjSafe").value)||"I used the correct PPE and followed safe working procedures."} ${sentence(document.getElementById("otjQuality").value)||"I checked line, level, plumb, gauge, dimensions and finish as the work progressed."} ${sentence(document.getElementById("otjNext").value)||"Next time, I will complete quality checks more frequently and act on feedback."}`;
+    const learningTime=formatLearningDuration(document.getElementById("otjHours").value);
+    const entry=`${ukDate(document.getElementById("otjDate").value)} — During ${learningTime||"the recorded learning time"} of off-the-job learning, I developed my skills through ${activity.toLowerCase()}. ${sentence(document.getElementById("otjDid").value)||"I completed the practical activity and followed the task information and correct sequence."} ${sentence(document.getElementById("otjLearned").value)||"I improved my knowledge and practical understanding of the task."} ${sentence(document.getElementById("otjSafe").value)||"I used the correct PPE and followed safe working procedures."} ${sentence(document.getElementById("otjQuality").value)||"I checked line, level, plumb, gauge, dimensions and finish as the work progressed."} ${sentence(document.getElementById("otjNext").value)||"Next time, I will complete quality checks more frequently and act on feedback."}`;
     document.getElementById("otjResult").innerHTML=`<section class="card"><h3>Generated off-the-job learning draft</h3><textarea id="otjDraft">${entry}</textarea><div class="button-row"><button class="secondary" id="copyOtj">Copy</button><button class="primary" id="saveOtj">Save draft</button></div></section>`;
     document.getElementById("copyOtj").onclick=()=>navigator.clipboard?.writeText(document.getElementById("otjDraft").value);
     document.getElementById("saveOtj").onclick=()=>{state.otj.unshift({date:new Date().toISOString(),text:document.getElementById("otjDraft").value});saveState(state);alert("OTJ draft saved.")};
