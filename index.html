@@ -654,7 +654,7 @@ function assignmentStatus(assignment,evidence={}){
   const answersDone=(assignment.statementQuestions||[]).every((_,i)=>evidence.answers?.[i]?.trim());
   const hasAnyPhoto=Object.values(evidence.photos||{}).some(p=>p?.imageKey);
   const hasAnyAnswer=Object.values(evidence.answers||{}).some(v=>String(v||"").trim());
-  const hasAny=hasAnyPhoto||hasAnyAnswer||!!evidence.reflection?.trim()||(evidence.additionalPhotos||[]).some(p=>p?.imageKey);
+  const hasAny=hasAnyPhoto||hasAnyAnswer||(evidence.additionalPhotos||[]).some(p=>p?.imageKey);
   return {photosDone,requiredDone,answersDone,hasAny,complete:requiredDone&&answersDone};
 }
 
@@ -795,14 +795,6 @@ async function downloadAssignmentPdf(assignment,evidence,profile){
     pdf.setFont("helvetica","normal");pdf.setFontSize(8);
     pdf.text(aLines,margin+5,y);y+=aLines.length*4+4;
   });
-
-  if(evidence.reflection){
-    const lines=pdf.splitTextToSize(evidence.reflection,contentW);
-    if(y+lines.length*4+12>pageH-20){pdf.addPage();addPageHeader();y=40}
-    y=sectionTitle(pdf,"Learner Reflection",y);
-    pdf.setFont("helvetica","normal");pdf.setFontSize(8);
-    pdf.text(lines,margin,y);y+=lines.length*4+5;
-  }
 
   if(y+32>pageH-18){pdf.addPage();addPageHeader();y=40}
   y=sectionTitle(pdf,"Learner Declaration",y);
@@ -1401,7 +1393,17 @@ function calculateDuration(start,finish){
   return `${hours?hours+" hour"+(hours===1?"":"s"):""}${hours&&mins?" ":""}${mins?mins+" minutes":""}`||"0 minutes";
 }
 function practical(){
-  view().innerHTML=`<section class="card"><span class="eyebrow">PRACTICAL ASSESSMENT</span><h2>Practical Marking</h2><p>The learner completes the self-mark first. The assessor can then mark the same wall and the PDF will compare both sets of judgements.</p><label>Task<select id="practicalTask">${practicalTasks.map((t,i)=>`<option value="${i}">${t.name}</option>`).join("")}</select></label></section><section id="practicalForm"></section>`;
+  view().innerHTML=`<section class="card"><span class="eyebrow">PRACTICAL ASSESSMENT</span><h2>Practical Marking</h2><p>The learner completes the self-mark first. The assessor can then mark the same wall and the PDF will compare both sets of judgements.</p><label>Task<select id="practicalTask">${practicalTasks.map((t,i)=>`<option value="${i}">${t.name}</option>`).join("")}</select></label></section><section id="practicalForm">
+      <section class="card">
+        <h3>Assessor Signature</h3>
+        <div class="signature-wrap">
+          <canvas id="assessorSignaturePad" class="signature-pad"></canvas>
+          <div class="button-row">
+            <button class="secondary" id="clearAssessorSignature">Clear signature</button>
+          </div>
+        </div>
+      </section>
+</section>`;
   const draw=()=>{
     const task=practicalTasks[Number(document.getElementById("practicalTask").value)];
     const record=state.practical[task.name]||{criteria:{},assessorCriteria:{}};
@@ -1702,7 +1704,7 @@ function settings(){
       <button class="primary" id="saveProfile">Save settings</button>
       <button class="secondary" id="backup">Export backup</button>
     </div>
-    <p class="muted" style="text-align:center;margin-top:18px">Brick Buddy • Version 2.0.8</p>
+    <p class="muted" style="text-align:center;margin-top:18px">Brick Buddy • Version 2.0.9</p>
   </section>`;
   const getSignature=setupSignaturePad(
     document.getElementById("learnerSignature"),
