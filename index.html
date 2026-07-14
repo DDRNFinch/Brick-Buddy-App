@@ -1783,11 +1783,9 @@ function mockReadinessLabel(record){
 }
 
 function home(){
-
   const knowledgeStatus=knowledgeReadiness();
   const discussionStatus=mockReadinessLabel(state.epaDiscussionMock);
   const practicalStatus=mockReadinessLabel(state.epaPracticalMock);
-
   const complete=assignments.filter(a=>assignmentStatus(a,state.evidence[a.id]).complete).length;
   const assignmentPct=Math.round(complete/assignments.length*100);
   const quizHistory=state.quizHistory||[];
@@ -1799,33 +1797,22 @@ function home(){
   view().innerHTML=`<section class="card hero release-hero">
     <div><span class="eyebrow">BRICKLAYER APPRENTICESHIP COMPANION</span><h2>${state.profile.learner?`Welcome back, ${learner.split(" ")[0]}`:"Welcome to Brick Buddy"}</h2>
     <p>Build evidence, record practical work and prepare for your EPA.</p></div>
-    ${state.profile.learner?`<button class="primary" data-route="${next?"
-    <section class="card">
-      <div class="section-heading">
-        <div>
-          <h3>EPA Readiness</h3>
-          <p>Your latest readiness across all three EPA preparation areas.</p>
-        </div>
-      </div>
-      <div class="epa-readiness-grid">
-        <button data-route="epaKnowledge" class="epa-readiness-card ${readinessClass(knowledgeStatus.label)}">
-          <span>🎓 Multiple Choice</span>
-          <strong>${knowledgeStatus.label}</strong>
-          <small>${knowledgeStatus.score!==null?`Best score ${knowledgeStatus.score}%`:"Complete the EPA Knowledge Mock"}</small>
-        </button>
-        <button data-route="epaDiscussionMock" class="epa-readiness-card ${readinessClass(discussionStatus)}">
-          <span>💬 Discussion</span>
-          <strong>${discussionStatus}</strong>
-          <small>Based on the latest assessor mock</small>
-        </button>
-        <button data-route="epaPracticalMock" class="epa-readiness-card ${readinessClass(practicalStatus)}">
-          <span>🧱 Practical</span>
-          <strong>${practicalStatus}</strong>
-          <small>Based on the latest assessor mock</small>
-        </button>
-      </div>
-    </section>
-evidence":"quiz"}">${next?`Continue Assignment ${next.id}`:"Open EPA preparation"}</button>`:`<button class="primary" data-route="settings">Complete learner setup</button>`}
+    ${state.profile.learner?`<button class="primary" data-route="${next?"evidence":"revision"}">${next?`Continue Assignment ${next.id}`:"Open EPA preparation"}</button>`:`<button class="primary" data-route="settings">Complete learner setup</button>`}
+  </section>
+  <section class="card">
+    <div class="section-heading"><div><h3>EPA Readiness</h3><p>Your latest readiness across all three EPA preparation areas.</p></div></div>
+    <div class="epa-readiness-grid">
+      <button data-route="epaKnowledge" class="epa-readiness-card ${readinessClass(knowledgeStatus.label)}">
+        <span>🎓 Multiple Choice</span><strong>${knowledgeStatus.label}</strong>
+        <small>${knowledgeStatus.score!==null?`Best score ${knowledgeStatus.score}%`:"Complete the EPA Knowledge Mock"}</small>
+      </button>
+      <button data-route="epaDiscussionMock" class="epa-readiness-card ${readinessClass(discussionStatus)}">
+        <span>💬 Discussion</span><strong>${discussionStatus}</strong><small>Based on the latest assessor mock</small>
+      </button>
+      <button data-route="epaPracticalMock" class="epa-readiness-card ${readinessClass(practicalStatus)}">
+        <span>🧱 Practical</span><strong>${practicalStatus}</strong><small>Based on the latest assessor mock</small>
+      </button>
+    </div>
   </section>
   <div class="dashboard premium-dashboard">
     <section class="metric"><span>Assignments complete</span><strong>${complete}<small>/20</small></strong><div class="progress"><div style="width:${assignmentPct}%"></div></div><em>${assignmentPct}% complete</em></section>
@@ -1838,12 +1825,11 @@ evidence":"quiz"}">${next?`Continue Assignment ${next.id}`:"Open EPA preparation
     <button data-route="evidence"><span class="tool-icon">📸</span><b>Assignments</b><small>Upload photographs, explain your work and export an Aptem-ready PDF.</small></button>
     <button data-route="otj"><span class="tool-icon">📝</span><b>Off-the-Job Learning</b><small>Turn genuine learning into a clear off-the-job reflection.</small></button>
     <button data-route="practical"><span class="tool-icon">🧱</span><b>Practical Marking</b><small>Compare the learner self-mark with the assessor mark and export a PDF.</small></button>
-    <button data-route="revision"><span class="tool-icon">🎓</span><b>Quizzes</b><small>Complete assignment refreshes and fixed EPA mock assessments.</small></button>
+    <button data-route="revision"><span class="tool-icon">🎓</span><b>Revision</b><small>Use revision cards, quizzes and EPA mock assessments.</small></button>
     <button id="homeInstallButton"><span class="tool-icon">📲</span><b>Install Brick Buddy</b><small>Add Brick Buddy to your home screen for quick access and offline use.</small></button>
   </div></section>`;
   document.getElementById("homeInstallButton")?.addEventListener("click",requestInstall);
 }
-
 let openAssignmentId=null;
 
 function refreshEvidenceKeepingPlace(id,scrollY=window.scrollY){
@@ -2468,7 +2454,7 @@ function settings(){
       <button class="primary" id="saveProfile">Save settings</button>
       <button class="secondary" id="backup">Export backup</button>
     </div>
-    <p class="muted" style="text-align:center;margin-top:18px">Brick Buddy • Version 2.2.3</p>
+    <p class="muted" style="text-align:center;margin-top:18px">Brick Buddy • Version 2.2.4</p>
   </section>`;
   const getSignature=setupSignaturePad(
     document.getElementById("learnerSignature"),
