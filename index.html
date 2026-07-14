@@ -1501,6 +1501,35 @@ function initialiseSignaturePad(canvas,saved,onSave){
   return ()=>ctx.clearRect(0,0,width,height);
 }
 
+
+async function saveGeneratedPdfToDocuments(pdf,title,type){
+  const blob=pdf.output("blob");
+  const timestamp=Date.now();
+  const key=`generated-pdf-${timestamp}-${safe(title)}`;
+  await putFile(key,blob);
+  state.documents.unshift({
+    id:`generated-${timestamp}`,
+    type,
+    title,
+    date:new Date().toISOString(),
+    fileKey:key,
+    mime:"application/pdf"
+  });
+  saveState(state);
+  return blob;
+}
+
+function downloadBlob(blob,filename){
+  const url=URL.createObjectURL(blob);
+  const link=document.createElement("a");
+  link.href=url;
+  link.download=filename;
+  document.body.appendChild(link);
+  link.click();
+  link.remove();
+  setTimeout(()=>URL.revokeObjectURL(url),1000);
+}
+
 async function downloadEpaPracticalMockPdf(record,profile){
   const {jsPDF}=window.jspdf;
   const pdf=new jsPDF({unit:"mm",format:"a4"});
@@ -1562,7 +1591,9 @@ async function downloadEpaPracticalMockPdf(record,profile){
     pdf.text(wrapped(`Signed by: ${record.assessorName||profile.assessor||"Assessor"}`,8,false,95),margin,y);
     pdf.text(`Date: ${record.date?pdfUkDate(record.date+"T12:00:00"):pdfUkDate()}`,120,y);
   }
-  addFooter(pdf);pdf.save("EPA-Practical-Mock.pdf");
+  addFooter(pdf);
+  const blob=await saveGeneratedPdfToDocuments(pdf,"EPA Practical Mock","EPA Practical Mock");
+  downloadBlob(blob,"EPA-Practical-Mock.pdf");
 }
 async function downloadEpaDiscussionMockPdf(record,profile){
   const {jsPDF}=window.jspdf;
@@ -1622,7 +1653,9 @@ async function downloadEpaDiscussionMockPdf(record,profile){
     pdf.text(wrapped(`Signed by: ${record.assessorName||profile.assessor||"Assessor"}`,8,false,95),margin,y);
     pdf.text(`Date: ${record.date?pdfUkDate(record.date+"T12:00:00"):pdfUkDate()}`,120,y);
   }
-  addFooter(pdf);pdf.save("Professional-Discussion-Mock.pdf");
+  addFooter(pdf);
+  const blob=await saveGeneratedPdfToDocuments(pdf,"Professional Discussion Mock","EPA Discussion Mock");
+  downloadBlob(blob,"Professional-Discussion-Mock.pdf");
 }
 function epaPracticalMock(){
   const record=state.epaPracticalMock||{marks:{},comments:"",learnerName:state.profile.learner||"",assessorName:state.profile.assessor||"",date:new Date().toISOString().slice(0,10),task:"",signature:""};
@@ -2216,6 +2249,73 @@ function quizFeedback(q){
   view().innerHTML=`<section class="card ${correct?"correct":"wrong"}"><h2>${correct?"Correct":acceptable?"Acceptable, but not the best answer":"Revision needed"}</h2><p><b>${q.options[q.answer]}</b></p><p>${q.explanation}</p><button class="primary" id="nextQuiz">${quizState.index===quizState.pool.length-1?"View result":"Next"}</button></section>`;
   document.getElementById("nextQuiz").onclick=()=>{quizState.index++;if(quizState.index>=quizState.pool.length)quizResult();else quizQuestion()};
 }
+
+async function downloadEpaKnowledgeMockPdf(result,profile){
+  const {jsPDF}=window.jspdf;
+  const pdf=new jsPDF({unit:"mm",format:"a4"});
+  const margin=14,contentW=182,pageBottom=274;
+  const header=()=>addHeader(pdf,"EPA Knowledge Mock","Multiple-Choice Readiness Report");
+  const newPage=()=>{pdf.addPage();header();return 40};
+  const ensure=(y,h)=>y+h>pageBottom?newPage():y;
+
+  header();
+  let y=40;
+  y=detailBox(pdf,[
+    ["Learner",profile.learner||"Not entered"],
+    ["Date",pdfUkDate()],
+    ["Score",`${result.score}%`],
+    ["Readiness",result.band]
+  ],y);
+
+  y=sectionTitle(pdf,"Assessment Summary",y);
+  pdf.setFont("helvetica","bold");
+  pdf.setFontSize(11);
+  pdf.text(`${result.correct} of ${result.total} best answers selected`,margin,y);
+  y+=8;
+  pdf.setFont("helvetica","normal");
+  pdf.setFontSize(8.5);
+  const summaryLines=pdf.splitTextToSize(result.summary,contentW);
+  pdf.text(summaryLines,margin,y);
+  y+=summaryLines.length*4+8;
+
+  if(result.weak.length){
+    y=sectionTitle(pdf,"Priority Revision Topics",ensure(y,18));
+    result.weak.forEach((item,index)=>{
+      const lines=pdf.splitTextToSize(`${index+1}. ${item.topic} — ${item.pct}%`,contentW);
+      y=ensure(y,lines.length*4+3);
+      pdf.setFont("helvetica","normal");
+      pdf.setFontSize(8.5);
+      pdf.text(lines,margin,y);
+      y+=lines.length*4+3;
+    });
+    y+=4;
+  }
+
+  if(result.wrong.length){
+    y=sectionTitle(pdf,"Questions to Review",ensure(y,18));
+    result.wrong.forEach((answer,index)=>{
+      const parts=[
+        `${index+1}. ${answer.q.topic||"General"}: ${answer.q.q}`,
+        `Best answer: ${answer.q.options[answer.q.answer]}`,
+        `Explanation: ${answer.q.explanation}`
+      ];
+      const lines=pdf.splitTextToSize(parts.join("\n"),contentW-8);
+      const height=lines.length*4+9;
+      y=ensure(y,height+3);
+      pdf.setFillColor(index%2?247:239,index%2?248:242,index%2?250:245);
+      pdf.roundedRect(margin,y-3,contentW,height,2,2,"F");
+      pdf.setFont("helvetica","normal");
+      pdf.setFontSize(8);
+      pdf.text(lines,margin+4,y+2);
+      y+=height+4;
+    });
+  }
+
+  addFooter(pdf);
+  const blob=await saveGeneratedPdfToDocuments(pdf,"EPA Knowledge Mock","EPA Knowledge Mock");
+  downloadBlob(blob,"EPA-Knowledge-Mock.pdf");
+}
+
 function quizResult(){
   const correct=quizState.answers.filter(x=>x.correct).length;
   const score=Math.round(correct/quizState.answers.length*100);
@@ -2225,7 +2325,11 @@ function quizResult(){
   const topicMap={};quizState.answers.forEach(a=>{const t=a.q.topic||"General";topicMap[t]??={right:0,total:0};topicMap[t].total++;if(a.correct)topicMap[t].right++});
   const weak=Object.entries(topicMap).map(([topic,v])=>({topic,pct:Math.round(v.right/v.total*100)})).sort((a,b)=>a.pct-b.pct).slice(0,5);
   const wrong=quizState.answers.filter(a=>!a.correct);
-  view().innerHTML=`<section class="card result-card ${score>=90?"passed":"review"}"><span class="eyebrow">EPA READINESS</span><h2>${band[0]}</h2><div class="score">${score}%</div><p><b>${correct} of 40</b> best answers selected.</p><p>${band[1]}</p></section><section class="card"><h3>Areas to revise</h3>${weak.map(x=>`<div class="split"><span>${x.topic}</span><b>${x.pct}%</b></div><div class="progress"><div style="width:${x.pct}%"></div></div>`).join("")}</section><section class="card"><h3>Questions to review</h3>${wrong.length?wrong.map((a,i)=>`<details class="question-box"><summary><b>${i+1}. ${a.q.topic}</b> — ${a.acceptable?"Acceptable answer chosen":"Incorrect answer"}</summary><p>${a.q.q}</p><p><b>Best answer:</b> ${a.q.options[a.q.answer]}</p><p>${a.q.explanation}</p></details>`).join(""):'<p>Excellent — no incorrect answers to review.</p>'}<div class="button-row"><button class="secondary" data-route="${quizState.returnRoute||"epaKnowledge"}">Back</button><button class="primary" data-route="cards">Open revision cards</button></div></section>`;
+  const knowledgeResult={score,correct,total:quizState.answers.length,band:band[0],summary:band[1],weak,wrong};
+  state.latestEpaKnowledgeResult=knowledgeResult;
+  saveState(state);
+  view().innerHTML=`<section class="card result-card ${score>=90?"passed":"review"}"><span class="eyebrow">EPA READINESS</span><h2>${band[0]}</h2><div class="score">${score}%</div><p><b>${correct} of 40</b> best answers selected.</p><p>${band[1]}</p></section><section class="card"><h3>Areas to revise</h3>${weak.map(x=>`<div class="split"><span>${x.topic}</span><b>${x.pct}%</b></div><div class="progress"><div style="width:${x.pct}%"></div></div>`).join("")}</section><section class="card"><h3>Questions to review</h3>${wrong.length?wrong.map((a,i)=>`<details class="question-box"><summary><b>${i+1}. ${a.q.topic}</b> — ${a.acceptable?"Acceptable answer chosen":"Incorrect answer"}</summary><p>${a.q.q}</p><p><b>Best answer:</b> ${a.q.options[a.q.answer]}</p><p>${a.q.explanation}</p></details>`).join(""):'<p>Excellent — no incorrect answers to review.</p>'}<div class="button-row"><button class="secondary" data-route="${quizState.returnRoute||"epaKnowledge"}">Back</button><button class="secondary" id="downloadEpaKnowledgeReport">Download PDF</button><button class="primary" data-route="cards">Open revision cards</button></div></section>`;
+  document.getElementById("downloadEpaKnowledgeReport").onclick=()=>downloadEpaKnowledgeMockPdf(knowledgeResult,state.profile);
 }
 
 function cards(){
@@ -2301,7 +2405,16 @@ function documents(){
 
   view().querySelectorAll("[data-redownload]").forEach(b=>b.onclick=async()=>{
     const doc=state.documents.find(x=>x.id===b.dataset.redownload);
-    if(doc.type==="Assignment Evidence Pack"){
+    if(doc.fileKey){
+      const file=await getFile(doc.fileKey);
+      if(!file){alert("This saved file could not be found on this device.");return}
+      const url=URL.createObjectURL(file);
+      const a=document.createElement("a");
+      a.href=url;
+      a.download=doc.title.endsWith(".pdf")?doc.title:`${doc.title}.pdf`;
+      a.click();
+      setTimeout(()=>URL.revokeObjectURL(url),1000);
+    }else if(doc.type==="Assignment Evidence Pack"){
       const a=assignments.find(x=>x.id===doc.assignmentId);
       await downloadAssignmentPdf(a,state.evidence[doc.assignmentId]||{},state.profile);
     }else if(doc.type==="Witness Testimony"){
@@ -2316,7 +2429,11 @@ function documents(){
     }
   });
 
-  view().querySelectorAll("[data-delete]").forEach(b=>b.onclick=()=>{
+  view().querySelectorAll("[data-delete]").forEach(b=>b.onclick=async()=>{
+    const doc=state.documents.find(x=>x.id===b.dataset.delete);
+    if(doc?.fileKey){
+      try{await deleteFile(doc.fileKey)}catch(e){}
+    }
     state.documents=state.documents.filter(x=>x.id!==b.dataset.delete);
     saveState(state);
     documents();
@@ -2404,7 +2521,7 @@ function settings(){
       <button class="primary" id="saveProfile">Save settings</button>
       <button class="secondary" id="backup">Export backup</button>
     </div>
-    <p class="muted" style="text-align:center;margin-top:18px">Brick Buddy • Version 2.2.5</p>
+    <p class="muted" style="text-align:center;margin-top:18px">Brick Buddy • Version 2.2.6</p>
   </section>`;
   const getSignature=setupSignaturePad(
     document.getElementById("learnerSignature"),
