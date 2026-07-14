@@ -1156,37 +1156,39 @@ async function downloadAssignmentPdf(assignment,evidence,profile){
   const requiredItems=[];
   for(let i=0;i<assignment.photos.length;i++){
     const item=evidence.photos?.[i];
-    if(item?.imageKey) requiredItems.push({title:assignment.photos[i],item,required:true});
+    if(item?.imageKey) requiredItems.push({title:assignment.photos[i],item});
   }
-  const extras=(evidence.additionalPhotos||[]).filter(p=>p?.imageKey).map((item,i)=>({title:`Additional image ${i+1}`,item,required:false}));
-  const allPhotos=[...requiredItems,...extras];
+  const supporting=(evidence.additionalPhotos||[]).filter(p=>p?.imageKey).map((item,i)=>({title:`Supporting item ${i+1}`,item}));
 
-  if(allPhotos.length){
-    y=sectionTitle(pdf,"Photographic Evidence",y);
-    const cols=3,gap=4,cellW=(contentW-gap*(cols-1))/cols,imgH=38;
-    for(let i=0;i<allPhotos.length;i++){
-      if(i>0 && i%3===0)y+=57;
-      if(y+54>pageH-18){pdf.addPage();addPageHeader();y=40}
-      const col=i%3,x=margin+col*(cellW+gap),photo=allPhotos[i];
+  const drawPhotoGrid=async(title,items,showExplanation)=>{
+    if(!items.length)return;
+    if(y+55>pageH-18){pdf.addPage();addPageHeader();y=40}
+    y=sectionTitle(pdf,title,y);
+    const cols=3,gap=4,cellW=(contentW-gap*(cols-1))/cols,imgH=34,rowH=showExplanation?55:45;
+    for(let i=0;i<items.length;i++){
+      if(i>0 && i%3===0)y+=rowH;
+      if(y+rowH>pageH-18){pdf.addPage();addPageHeader();y=40;y=sectionTitle(pdf,title,y)}
+      const col=i%3,x=margin+col*(cellW+gap),photo=items[i];
       pdf.setFont("helvetica","bold");pdf.setFontSize(8);
-      pdf.text(pdf.splitTextToSize(photo.title,cellW),x,y);
+      pdf.text(pdf.splitTextToSize(photo.title,cellW).slice(0,2),x,y);
       const image=await getImage(photo.item.imageKey);
       if(image){
         const props=pdf.getImageProperties(image);
         const ratio=Math.min(cellW/props.width,imgH/props.height);
         const w=props.width*ratio,h=props.height*ratio;
-        pdf.setDrawColor(210,214,220);
-        pdf.roundedRect(x,y+7,cellW,imgH,2,2,"S");
+        pdf.setDrawColor(210,214,220);pdf.roundedRect(x,y+7,cellW,imgH,2,2,"S");
         pdf.addImage(image,"JPEG",x+(cellW-w)/2,y+7+(imgH-h)/2,w,h);
       }
-      if(photo.required){
+      if(showExplanation){
         pdf.setFont("helvetica","normal");pdf.setFontSize(7);
         const text=pdf.splitTextToSize(photo.item.explanation||"",cellW);
-        pdf.text(text.slice(0,3),x,y+48);
+        pdf.text(text.slice(0,3),x,y+44);
       }
     }
-    y+=57;
-  }
+    y+=rowH;
+  };
+  await drawPhotoGrid("Required Photographic Evidence",requiredItems,true);
+  await drawPhotoGrid("Supporting Evidence (Optional)",supporting,false);
 
   if(y+45>pageH-18){pdf.addPage();addPageHeader();y=40}
   y=sectionTitle(pdf,"Knowledge and Behaviour Questions",y);
@@ -1226,43 +1228,84 @@ async function downloadAssignmentPdf(assignment,evidence,profile){
 async function downloadPracticalPdf(taskName,record,guidance,profile={}){
   const {jsPDF}=window.jspdf;
   const pdf=new jsPDF({unit:"mm",format:"a4"});
-  const ratingScore=v=>v==="Excellent"?3:v==="Good"?2:v==="Needs improvement"?1:0;
-  const learnerScore=record.score||0,assessorScore=record.assessorScore||0,difference=assessorScore-learnerScore;
-  addHeader(pdf,"Practical Assessment Comparison",taskName);
-  let y=43;
-  y=detailBox(pdf,[["Learner",profile.learner||"Not entered"],["Date",pdfUkDate(record.date||Date.now())],["Time started",record.timeStarted||"Not recorded"],["Time finished",record.timeFinished||"Not recorded"],["Total time",record.timeTaken||"Not recorded"],["Assessor",record.assessorName||profile.assessor||"Not entered"]],y);
+  const pageH=297,margin=14,width=182;
+  const header=()=>addHeader(pdf,"Practical Assessment",record.customTaskDescription||taskName);
+  const newPage=()=>{pdf.addPage();header();return 42};
+  header();
+  let y=42;
+  y=detailBox(pdf,[
+    ["Learner",profile.learner||"Not entered"],
+    ["Assessor",record.assessorName||profile.assessor||"Not entered"],
+    ["Assessment date",record.assessorDate?pdfUkDate(record.assessorDate+"T12:00:00"):pdfUkDate(record.date||Date.now())],
+    ["Time",record.timeTaken||"Not recorded"]
+  ],y);
 
-  pdf.setFillColor(...GOLD);pdf.roundedRect(15,y,180,22,3,3,"F");pdf.setTextColor(255,255,255);pdf.setFont("helvetica","bold");pdf.setFontSize(13);
-  pdf.text(`Learner: ${learnerScore}%`,28,y+14);pdf.text(`Assessor: ${assessorScore}%`,105,y+14,{align:"center"});pdf.text(`Difference: ${difference>0?"+":""}${difference}%`,188,y+14,{align:"right"});pdf.setTextColor(...DARK);y+=31;
+  y=sectionTitle(pdf,"Assessment Summary",y);
+  pdf.setFillColor(248,249,251);pdf.roundedRect(margin,y-3,width,16,3,3,"F");
+  pdf.setFont("helvetica","bold");pdf.setFontSize(10);
+  pdf.text(`Learner self-mark: ${record.score||0}%`,margin+6,y+6);
+  pdf.text(`Assessor mark: ${record.assessorScore||0}%`,105,y+6);
+  y+=22;
 
-  y=sectionTitle(pdf,"Learner and Assessor Comparison",y);
-  pdf.setFontSize(9);pdf.setFont("helvetica","bold");pdf.text("Criterion",18,y);pdf.text("Learner",115,y,{align:"center"});pdf.text("Assessor",165,y,{align:"center"});pdf.text("Difference",192,y,{align:"right"});y+=6;
-  const criteriaNames=[...new Set([...Object.keys(record.criteria||{}),...Object.keys(record.assessorCriteria||{})])];
-  for(const criterion of criteriaNames){
-    if(y>266){pdf.addPage();addHeader(pdf,"Practical Assessment Comparison",taskName);y=43}
-    const learner=record.criteria?.[criterion]||"Not marked",assessor=record.assessorCriteria?.[criterion]||"Not marked";
-    const delta=ratingScore(assessor)-ratingScore(learner);
-    pdf.setFillColor(...(learner===assessor?[245,250,247]:[255,248,232]));pdf.roundedRect(15,y-4,180,11,2,2,"F");
-    pdf.setFont("helvetica","normal");pdf.text(criterion,18,y+2);pdf.text(learner,115,y+2,{align:"center"});pdf.text(assessor,165,y+2,{align:"center"});pdf.text(delta===0?"Same":delta>0?"Assessor higher":"Learner higher",192,y+2,{align:"right"});y+=14;
+  y=sectionTitle(pdf,"Assessment Criteria",y);
+  const names=[...new Set([...Object.keys(record.criteria||{}),...Object.keys(record.assessorCriteria||{})])];
+  const col=[margin,78,132];
+  pdf.setFillColor(35,42,51);pdf.roundedRect(margin,y-4,width,9,2,2,"F");
+  pdf.setTextColor(255,255,255);pdf.setFont("helvetica","bold");pdf.setFontSize(8);
+  pdf.text("Criterion",col[0]+3,y+1);pdf.text("Learner",col[1]+3,y+1);pdf.text("Assessor",col[2]+3,y+1);
+  pdf.setTextColor(...DARK);y+=10;
+  for(const name of names){
+    const learner=record.criteria?.[name]||"Not marked";
+    const assessor=record.assessorCriteria?.[name]||"Not marked";
+    const nameLines=pdf.splitTextToSize(name,56);
+    const learnerLines=pdf.splitTextToSize(learner,48);
+    const assessorLines=pdf.splitTextToSize(assessor,48);
+    const rowH=Math.max(nameLines.length,learnerLines.length,assessorLines.length)*4+5;
+    if(y+rowH>270)y=newPage();
+    pdf.setFillColor(y%2?[249,250,252]:[244,246,248]);pdf.roundedRect(margin,y-3,width,rowH,1.5,1.5,"F");
+    pdf.setFont("helvetica","normal");pdf.setFontSize(8);
+    pdf.text(nameLines,col[0]+3,y+2);pdf.text(learnerLines,col[1]+3,y+2);pdf.text(assessorLines,col[2]+3,y+2);
+    y+=rowH+2;
   }
 
-  if(y>222){pdf.addPage();addHeader(pdf,"Practical Assessment Comparison",taskName);y=43}
-  y=sectionTitle(pdf,"Areas for Improvement",y);
-  const improvementCriteria=criteriaNames.filter(c=>record.criteria?.[c]==="Needs improvement"||record.assessorCriteria?.[c]==="Needs improvement"||record.assessorCriteria?.[c]==="Not checked");
-  pdf.setFont("helvetica","normal");pdf.setFontSize(10);
-  if(!improvementCriteria.length){pdf.text("No specific improvement areas were identified in the submitted marks.",15,y);y+=10}
-  else for(const c of improvementCriteria){const lines=pdf.splitTextToSize(`${c}: ${guidance[c]||"Practise this area again, check it more frequently and ask for feedback."}`,176);pdf.setFont("helvetica","bold");pdf.text("•",16,y);pdf.setFont("helvetica","normal");pdf.text(lines,21,y);y+=lines.length*5+4}
+  const addTextSection=(title,text)=>{
+    if(!text)return;
+    const lines=pdf.splitTextToSize(text,width);
+    if(y+lines.length*4+14>272)y=newPage();
+    y=sectionTitle(pdf,title,y);pdf.setFont("helvetica","normal");pdf.setFontSize(9);pdf.text(lines,margin,y);y+=lines.length*4+7;
+  };
+  addTextSection("Learner Reflection",record.reflection);
+  addTextSection("Assessor Feedback",record.assessorComments);
 
-  if(record.reflection){if(y>235){pdf.addPage();addHeader(pdf,"Practical Assessment Comparison",taskName);y=43}y=sectionTitle(pdf,"Learner Reflection",y);pdf.text(pdf.splitTextToSize(record.reflection,180),15,y);y+=pdf.splitTextToSize(record.reflection,180).length*5+8}
-  if(record.assessorComments){if(y>235){pdf.addPage();addHeader(pdf,"Practical Assessment Comparison",taskName);y=43}y=sectionTitle(pdf,"Assessor Feedback",y);pdf.text(pdf.splitTextToSize(record.assessorComments,180),15,y);y+=pdf.splitTextToSize(record.assessorComments,180).length*5+8}
+  const improvements=names.filter(c=>record.criteria?.[c]==="Needs improvement"||record.assessorCriteria?.[c]==="Needs improvement"||record.assessorCriteria?.[c]==="Not checked");
+  if(improvements.length){
+    const text=improvements.map(c=>`${c}: ${guidance[c]||"Practise this area again and complete more frequent quality checks."}`).join("\n");
+    addTextSection("Areas for Improvement",text);
+  }
 
-  if(record.imageKey){const image=await getImage(record.imageKey);if(image){pdf.addPage();addHeader(pdf,"Practical Assessment Comparison",taskName);let iy=43;iy=sectionTitle(pdf,"Photograph of Completed Practical Work",iy);const props=pdf.getImageProperties(image);const ratio=Math.min(180/props.width,225/props.height);pdf.setDrawColor(220,224,228);pdf.roundedRect(14,iy-1,props.width*ratio+2,props.height*ratio+2,2,2,"S");pdf.addImage(image,"JPEG",15,iy,props.width*ratio,props.height*ratio)}}
+  if(record.imageKey){
+    const image=await getImage(record.imageKey);
+    if(image){
+      if(y+72>272)y=newPage();
+      y=sectionTitle(pdf,"Completed Practical",y);
+      const props=pdf.getImageProperties(image);const maxW=90,maxH=62;
+      const ratio=Math.min(maxW/props.width,maxH/props.height);const w=props.width*ratio,h=props.height*ratio;
+      pdf.setDrawColor(210,214,220);pdf.roundedRect(margin,y-1,w+2,h+2,2,2,"S");pdf.addImage(image,"JPEG",margin+1,y,w,h);y+=h+8;
+    }
+  }
 
-  pdf.addPage();addHeader(pdf,"Practical Assessment Comparison",taskName);let sy=43;sy=sectionTitle(pdf,"Learner Declaration",sy);pdf.setFont("helvetica","normal");pdf.setFontSize(10);pdf.text("I confirm that this self-assessment reflects my own practical work and honest evaluation of the task.",15,sy);sy+=12;if(profile.signature){pdf.addImage(profile.signature,"PNG",15,sy,60,20);sy+=24}pdf.setFont("helvetica","bold");pdf.text(`Signed by: ${profile.learner||"Learner"}`,15,sy);pdf.setFont("helvetica","normal");pdf.text(`Date: ${pdfUkDate()}`,120,sy);sy+=16;
-  sy=sectionTitle(pdf,"Assessor Confirmation",sy);pdf.text(`Assessor: ${record.assessorName||profile.assessor||"Not entered"}`,15,sy);pdf.text(`Assessment date: ${record.assessorDate?pdfUkDate(record.assessorDate+"T12:00:00"):"Not entered"}`,120,sy);
-  addFooter(pdf);pdf.save(`Practical-Assessment-Comparison-${safe(taskName)}.pdf`);
+  if(y+42>272)y=newPage();
+  y=sectionTitle(pdf,"Declarations",y);
+  pdf.setFont("helvetica","normal");pdf.setFontSize(8);
+  pdf.text(pdf.splitTextToSize("The learner confirms that this self-assessment reflects their own practical work. The assessor confirms that the recorded judgement is based on the work inspected.",width),margin,y);y+=12;
+  if(profile.signature){pdf.addImage(profile.signature,"PNG",margin,y,45,14)}
+  pdf.setFont("helvetica","bold");pdf.text(`Learner: ${profile.learner||"Not entered"}`,margin,y+18);
+  pdf.text(`Assessor: ${record.assessorName||profile.assessor||"Not entered"}`,108,y+18);
+  pdf.setFont("helvetica","normal");pdf.text(`Date: ${pdfUkDate()}`,margin,y+24);pdf.text(`Assessment date: ${record.assessorDate?pdfUkDate(record.assessorDate+"T12:00:00"):"Not entered"}`,108,y+24);
+
+  addFooter(pdf);
+  pdf.save(`Practical-Assessment-${safe(record.customTaskDescription||taskName)}.pdf`);
 }
-
 
 async function downloadWitnessPdf(doc,profile={}){
   const {jsPDF}=window.jspdf;
@@ -1518,13 +1561,13 @@ function evidence(){
       }).join("")}
       <section class="photo-card">
         <div class="split">
-          <div><b>📷 Additional images</b><small>Optional — upload up to 5 extra photos. No explanation required.</small></div>
-          <button class="secondary" data-add-extra="${a.id}" ${(ev.additionalPhotos||[]).length>=5?"disabled":""}>+ Add image</button>
+          <div><b>📎 Supporting Evidence <em>(Optional)</em></b><small>Examples: RAMS, drawings, material lists, etc.</small></div>
+          <button class="secondary" data-add-extra="${a.id}" ${(ev.additionalPhotos||[]).length>=5?"disabled":""}>+ Add File or Photo</button>
         </div>
         <div class="additional-photo-grid">
           ${(ev.additionalPhotos||[]).map((item,i)=>`
             <section class="photo-card ${item?.imageKey?"done":""}">
-              <div class="split"><b>Additional image ${i+1}</b><span>${item?.imageKey?"Added ✓":"Empty"}</span></div>
+              <div class="split"><b>Supporting item ${i+1}</b><span>${item?.imageKey?"Added ✓":"Empty"}</span></div>
               <div class="upload-actions">
                 <label class="upload-choice primary-choice">📷 Take Photo<input type="file" accept="image/*" capture="environment" data-extra-image="${a.id}-${i}"></label>
                 <label class="upload-choice">🖼️ Choose Photo<input type="file" accept="image/*" data-extra-image="${a.id}-${i}"></label>
@@ -1992,6 +2035,7 @@ function settings(){
       <button class="primary" id="saveProfile">Save settings</button>
       <button class="secondary" id="backup">Export backup</button>
     </div>
+    <p class="muted" style="text-align:center;margin-top:18px">Brick Buddy • Version 2.0.7</p>
   </section>`;
   const getSignature=setupSignaturePad(
     document.getElementById("learnerSignature"),
