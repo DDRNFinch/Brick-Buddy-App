@@ -1504,10 +1504,26 @@ function initialiseSignaturePad(canvas,saved,onSave){
 async function downloadEpaPracticalMockPdf(record,profile){
   const {jsPDF}=window.jspdf;
   const pdf=new jsPDF({unit:"mm",format:"a4"});
-  const margin=14,contentW=182,pageBottom=276;
+  const margin=14,contentW=182,innerW=172,pageBottom=274;
   const header=()=>addHeader(pdf,"EPA Practical Mock","Assessor Mark Sheet");
   const newPage=()=>{pdf.addPage();header();return 40};
   const ensure=(y,h)=>y+h>pageBottom?newPage():y;
+  const wrapped=(text,size=8,bold=false,width=innerW)=>{
+    pdf.setFont("helvetica",bold?"bold":"normal");
+    pdf.setFontSize(size);
+    return pdf.splitTextToSize(String(text||""),width);
+  };
+  const drawLabelled=(label,text,y,shade=false)=>{
+    const labelLines=wrapped(label,8,true);
+    const bodyLines=wrapped(text,8,false);
+    const h=(labelLines.length+bodyLines.length)*4+8;
+    y=ensure(y,h+3);
+    if(shade){pdf.setFillColor(246,248,250);pdf.roundedRect(margin,y-3,contentW,h,2,2,"F")}
+    let ty=y+2;
+    pdf.setFont("helvetica","bold");pdf.setFontSize(8);pdf.text(labelLines,margin+5,ty);ty+=labelLines.length*4;
+    pdf.setFont("helvetica","normal");pdf.setFontSize(8);pdf.text(bodyLines,margin+5,ty);
+    return y+h+3;
+  };
 
   header();
   let y=40;
@@ -1517,88 +1533,60 @@ async function downloadEpaPracticalMockPdf(record,profile){
     ["Date",record.date?pdfUkDate(record.date+"T12:00:00"):pdfUkDate()],
     ["Practical task",record.task||"Not entered"]
   ],y);
-
   y=sectionTitle(pdf,"Overall Judgement",y);
-  pdf.setFont("helvetica","bold");
-  pdf.setFontSize(12);
-  pdf.text(mockJudgementSummary(record.marks),margin,y);
-  y+=10;
+  pdf.setFont("helvetica","bold");pdf.setFontSize(12);pdf.text(mockJudgementSummary(record.marks),margin,y);y+=10;
 
   epaPracticalCriteria.forEach((criterion,index)=>{
     const mark=record.marks?.[criterion.name]||"Not assessed";
     const needs=mark==="Nearly Ready"||mark==="More Practice Required";
-
-    const parts=[
-      {label:`${index+1}. ${criterion.name}`,bold:true},
-      {label:`Assessor judgement: ${mark}`,bold:true}
-    ];
-
-    if(needs){
-      const improvement=mark==="Nearly Ready"
-        ? criterion.nearly
-        : `This area requires further development before EPA. ${criterion.nearly}`;
-      parts.push(
-        {label:`Improvement guidance: ${improvement}`},
-        {label:`Brick Buddy revision: ${criterion.revision}`},
-        {label:`Suggested practice: ${criterion.practice}`}
-      );
-    }
-
-    const wrapped=parts.map(p=>({
-      ...p,
-      lines:pdf.splitTextToSize(p.label,contentW-10)
-    }));
-    const h=wrapped.reduce((sum,p)=>sum+p.lines.length*4,0)+10;
-
-    y=ensure(y,h+4);
+    const titleLines=wrapped(`${index+1}. ${criterion.name}`,9,true);
+    y=ensure(y,titleLines.length*4+17);
     pdf.setFillColor(index%2?247:239,index%2?248:242,index%2?250:245);
-    pdf.roundedRect(margin,y-3,contentW,h,2,2,"F");
-
-    let ty=y+2;
-    wrapped.forEach(p=>{
-      pdf.setFont("helvetica",p.bold?"bold":"normal");
-      pdf.setFontSize(8);
-      pdf.text(p.lines,margin+5,ty);
-      ty+=p.lines.length*4;
-    });
-    y+=h+4;
+    pdf.roundedRect(margin,y-3,contentW,titleLines.length*4+12,2,2,"F");
+    pdf.setFont("helvetica","bold");pdf.setFontSize(9);pdf.text(titleLines,margin+5,y+2);
+    pdf.setFontSize(8);pdf.text(`Assessor judgement: ${mark}`,margin+5,y+titleLines.length*4+3);
+    y+=titleLines.length*4+16;
+    if(needs){
+      const improvement=mark==="Nearly Ready"?criterion.nearly:`This area requires further development before EPA. ${criterion.nearly}`;
+      y=drawLabelled("Improvement guidance",improvement,y,true);
+      y=drawLabelled("Brick Buddy revision",criterion.revision,y,false);
+      y=drawLabelled("Suggested practice",criterion.practice,y,true);
+    }
+    y+=3;
   });
 
-  if(record.comments){
-    const lines=pdf.splitTextToSize(record.comments,contentW);
-    const h=lines.length*4+14;
-    y=ensure(y,h);
-    y=sectionTitle(pdf,"Assessor Feedback and Next Actions",y);
-    pdf.setFont("helvetica","normal");
-    pdf.setFontSize(8.5);
-    pdf.text(lines,margin,y);
-    y+=lines.length*4+8;
-  }
-
+  if(record.comments){y=sectionTitle(pdf,"Assessor Feedback and Next Actions",ensure(y,18));y=drawLabelled("Feedback",record.comments,y,false)}
   if(record.signature){
-    y=ensure(y,30);
-    y=sectionTitle(pdf,"Assessor Signature",y);
-    pdf.addImage(record.signature,"PNG",margin,y,48,15);
-    y+=19;
-    pdf.setFont("helvetica","normal");
-    pdf.setFontSize(8);
-    pdf.text(`Signed by: ${record.assessorName||profile.assessor||"Assessor"}`,margin,y);
+    y=ensure(y,30);y=sectionTitle(pdf,"Assessor Signature",y);pdf.addImage(record.signature,"PNG",margin,y,48,15);y+=19;
+    pdf.setFont("helvetica","normal");pdf.setFontSize(8);
+    pdf.text(wrapped(`Signed by: ${record.assessorName||profile.assessor||"Assessor"}`,8,false,95),margin,y);
     pdf.text(`Date: ${record.date?pdfUkDate(record.date+"T12:00:00"):pdfUkDate()}`,120,y);
   }
-
-  addFooter(pdf);
-  pdf.save("EPA-Practical-Mock.pdf");
+  addFooter(pdf);pdf.save("EPA-Practical-Mock.pdf");
 }
 async function downloadEpaDiscussionMockPdf(record,profile){
   const {jsPDF}=window.jspdf;
   const pdf=new jsPDF({unit:"mm",format:"a4"});
-  const margin=14,contentW=182,pageBottom=276;
+  const margin=14,contentW=182,innerW=172,pageBottom=274;
   const header=()=>addHeader(pdf,"Professional Discussion Mock","Assessor Mark Sheet");
   const newPage=()=>{pdf.addPage();header();return 40};
   const ensure=(y,h)=>y+h>pageBottom?newPage():y;
+  const wrapped=(text,size=8,bold=false,width=innerW)=>{
+    pdf.setFont("helvetica",bold?"bold":"normal");pdf.setFontSize(size);
+    return pdf.splitTextToSize(String(text||""),width);
+  };
+  const drawLabelled=(label,text,y,shade=false)=>{
+    const labelLines=wrapped(label,8,true),bodyLines=wrapped(text,8,false);
+    const h=(labelLines.length+bodyLines.length)*4+8;
+    y=ensure(y,h+3);
+    if(shade){pdf.setFillColor(246,248,250);pdf.roundedRect(margin,y-3,contentW,h,2,2,"F")}
+    let ty=y+2;
+    pdf.setFont("helvetica","bold");pdf.setFontSize(8);pdf.text(labelLines,margin+5,ty);ty+=labelLines.length*4;
+    pdf.setFont("helvetica","normal");pdf.setFontSize(8);pdf.text(bodyLines,margin+5,ty);
+    return y+h+3;
+  };
 
-  header();
-  let y=40;
+  header();let y=40;
   y=detailBox(pdf,[
     ["Learner",record.learnerName||profile.learner||"Not entered"],
     ["Assessor",record.assessorName||profile.assessor||"Not entered"],
@@ -1609,70 +1597,32 @@ async function downloadEpaDiscussionMockPdf(record,profile){
   epaDiscussionQuestions.forEach((item,index)=>{
     const mark=record.marks?.[index]||"Not assessed";
     const needs=mark==="Nearly Ready"||mark==="More Practice Required";
-    let feedback="";
-    if(mark==="Nearly Ready"){
-      feedback="You showed a reasonable understanding of this topic, but your explanation would benefit from greater detail, clearer reasoning or stronger examples.";
-    }else if(mark==="More Practice Required"){
-      feedback="This topic requires further revision and discussion before EPA. Focus on understanding the principles as well as how they apply in the workplace.";
-    }
-
-    const parts=[
-      {label:`${index+1}. ${item.q}`,bold:true},
-      {label:`Assessor judgement: ${mark}`,bold:true}
-    ];
-
-    if(needs){
-      parts.push(
-        {label:`Feedback: ${feedback}`},
-        {label:`Brick Buddy revision: ${item.revision}`},
-        {label:`Suggested workplace activity: ${item.workplace}`}
-      );
-    }
-
-    const wrapped=parts.map(p=>({
-      ...p,
-      lines:pdf.splitTextToSize(p.label,contentW-10)
-    }));
-    const h=wrapped.reduce((sum,p)=>sum+p.lines.length*4,0)+10;
-
-    y=ensure(y,h+4);
+    const questionLines=wrapped(`${index+1}. ${item.q}`,9,true);
+    y=ensure(y,questionLines.length*4+17);
     pdf.setFillColor(index%2?247:239,index%2?248:242,index%2?250:245);
-    pdf.roundedRect(margin,y-3,contentW,h,2,2,"F");
-
-    let ty=y+2;
-    wrapped.forEach(p=>{
-      pdf.setFont("helvetica",p.bold?"bold":"normal");
-      pdf.setFontSize(8);
-      pdf.text(p.lines,margin+5,ty);
-      ty+=p.lines.length*4;
-    });
-    y+=h+4;
+    pdf.roundedRect(margin,y-3,contentW,questionLines.length*4+12,2,2,"F");
+    pdf.setFont("helvetica","bold");pdf.setFontSize(9);pdf.text(questionLines,margin+5,y+2);
+    pdf.setFontSize(8);pdf.text(`Assessor judgement: ${mark}`,margin+5,y+questionLines.length*4+3);
+    y+=questionLines.length*4+16;
+    if(needs){
+      const feedback=mark==="Nearly Ready"
+        ?"You showed a reasonable understanding of this topic, but your explanation would benefit from greater detail, clearer reasoning or stronger examples."
+        :"This topic requires further revision and discussion before EPA. Focus on understanding the principles as well as how they apply in the workplace.";
+      y=drawLabelled("Feedback",feedback,y,true);
+      y=drawLabelled("Brick Buddy revision",item.revision,y,false);
+      y=drawLabelled("Suggested workplace activity",item.workplace,y,true);
+    }
+    y+=3;
   });
 
-  if(record.comments){
-    const lines=pdf.splitTextToSize(record.comments,contentW);
-    const h=lines.length*4+14;
-    y=ensure(y,h);
-    y=sectionTitle(pdf,"Assessor Feedback and Priority Revision",y);
-    pdf.setFont("helvetica","normal");
-    pdf.setFontSize(8.5);
-    pdf.text(lines,margin,y);
-    y+=lines.length*4+8;
-  }
-
+  if(record.comments){y=sectionTitle(pdf,"Assessor Feedback and Priority Revision",ensure(y,18));y=drawLabelled("Feedback",record.comments,y,false)}
   if(record.signature){
-    y=ensure(y,30);
-    y=sectionTitle(pdf,"Assessor Signature",y);
-    pdf.addImage(record.signature,"PNG",margin,y,48,15);
-    y+=19;
-    pdf.setFont("helvetica","normal");
-    pdf.setFontSize(8);
-    pdf.text(`Signed by: ${record.assessorName||profile.assessor||"Assessor"}`,margin,y);
+    y=ensure(y,30);y=sectionTitle(pdf,"Assessor Signature",y);pdf.addImage(record.signature,"PNG",margin,y,48,15);y+=19;
+    pdf.setFont("helvetica","normal");pdf.setFontSize(8);
+    pdf.text(wrapped(`Signed by: ${record.assessorName||profile.assessor||"Assessor"}`,8,false,95),margin,y);
     pdf.text(`Date: ${record.date?pdfUkDate(record.date+"T12:00:00"):pdfUkDate()}`,120,y);
   }
-
-  addFooter(pdf);
-  pdf.save("Professional-Discussion-Mock.pdf");
+  addFooter(pdf);pdf.save("Professional-Discussion-Mock.pdf");
 }
 function epaPracticalMock(){
   const record=state.epaPracticalMock||{marks:{},comments:"",learnerName:state.profile.learner||"",assessorName:state.profile.assessor||"",date:new Date().toISOString().slice(0,10),task:"",signature:""};
@@ -2454,7 +2404,7 @@ function settings(){
       <button class="primary" id="saveProfile">Save settings</button>
       <button class="secondary" id="backup">Export backup</button>
     </div>
-    <p class="muted" style="text-align:center;margin-top:18px">Brick Buddy • Version 2.2.4</p>
+    <p class="muted" style="text-align:center;margin-top:18px">Brick Buddy • Version 2.2.5</p>
   </section>`;
   const getSignature=setupSignaturePad(
     document.getElementById("learnerSignature"),
