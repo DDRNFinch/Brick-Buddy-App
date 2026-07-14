@@ -654,7 +654,7 @@ function assignmentStatus(assignment,evidence={}){
   const answersDone=(assignment.statementQuestions||[]).every((_,i)=>evidence.answers?.[i]?.trim());
   const hasAnyPhoto=Object.values(evidence.photos||{}).some(p=>p?.imageKey);
   const hasAnyAnswer=Object.values(evidence.answers||{}).some(v=>String(v||"").trim());
-  const hasAny=hasAnyPhoto||hasAnyAnswer||(evidence.additionalPhotos||[]).some(p=>p?.imageKey);
+  const hasAny=hasAnyPhoto||hasAnyAnswer||!!evidence.reflection?.trim()||(evidence.additionalPhotos||[]).some(p=>p?.imageKey);
   return {photosDone,requiredDone,answersDone,hasAny,complete:requiredDone&&answersDone};
 }
 
@@ -795,6 +795,14 @@ async function downloadAssignmentPdf(assignment,evidence,profile){
     pdf.setFont("helvetica","normal");pdf.setFontSize(8);
     pdf.text(aLines,margin+5,y);y+=aLines.length*4+4;
   });
+
+  if(evidence.reflection){
+    const lines=pdf.splitTextToSize(evidence.reflection,contentW);
+    if(y+lines.length*4+12>pageH-20){pdf.addPage();addPageHeader();y=40}
+    y=sectionTitle(pdf,"Learner Reflection",y);
+    pdf.setFont("helvetica","normal");pdf.setFontSize(8);
+    pdf.text(lines,margin,y);y+=lines.length*4+5;
+  }
 
   if(y+32>pageH-18){pdf.addPage();addPageHeader();y=40}
   y=sectionTitle(pdf,"Learner Declaration",y);
@@ -943,10 +951,17 @@ async function downloadPracticalPdf(taskName,record,guidance,profile={}){
     pdf.text(declaration,margin,y);
     y+=declaration.length*4+4;
 
+    pdf.setFont("helvetica","bold");
+    pdf.setFontSize(8);
     if(profile.signature){
-      pdf.addImage(profile.signature,"PNG",margin,y,42,13);
-      y+=16;
+      pdf.text("Learner signature",margin,y);
+      pdf.addImage(profile.signature,"PNG",margin,y+2,42,13);
     }
+    if(record.assessorSignature){
+      pdf.text("Assessor signature",108,y);
+      pdf.addImage(record.assessorSignature,"PNG",108,y+2,42,13);
+    }
+    if(profile.signature||record.assessorSignature)y+=18;
 
     pdf.setFont("helvetica","bold");
     pdf.text(`Learner: ${profile.learner||"Not entered"}`,margin,y);
@@ -1194,7 +1209,7 @@ function evidence(){
   ${assignments.map(a=>{
     const ev=state.evidence[a.id]||{photos:{},answers:{}};
     const status=assignmentStatus(a,ev);
-    return `<details class="card assignment" ${a.id===state.lastAssignment?"open":""}>
+    return `<details class="card assignment">
       <summary><span class="number ${status.complete?"status-complete":(status.hasAny?"status-some":"status-none")}">${a.id}</span><span><b>${a.title}</b><small>${status.photosDone}/3 photos • ${status.complete?"Ready":"In progress"}</small></span></summary>
       <div class="grid">
         <label>Learner name<input value="${state.profile.learner||"Not set"}" disabled></label>
@@ -1237,7 +1252,6 @@ function evidence(){
       </section>
       ${status.requiredDone?`<section class="question-box"><h3>Knowledge and behaviour questions</h3>
         ${a.statementQuestions.map((q,i)=>`<label><b>${i<3?`Knowledge ${i+1}`:"Behaviour"}</b><span>${q}</span><textarea data-answer="${a.id}-${i}">${ev.answers?.[i]||""}</textarea></label>`).join("")}
-        <label><b>Learner reflection</b><textarea data-reflection="${a.id}">${ev.reflection||""}</textarea></label>
       </section>`:`<p class="locked">Complete Photographs 1–3 to unlock the questions.</p>`}
       <div class="button-row">
         <button class="secondary" data-save="${a.id}">Save progress</button>
@@ -1338,7 +1352,6 @@ function evidence(){
       ev.answers ||= {};
       ev.answers[i]=view().querySelector(`[data-answer="${id}-${i}"]`)?.value.trim()||ev.answers[i]||"";
     });
-    ev.reflection=view().querySelector(`[data-reflection="${id}"]`)?.value.trim()||ev.reflection||"";
     state.lastAssignment=id;saveState(state);evidence();
   });
 
@@ -1393,17 +1406,7 @@ function calculateDuration(start,finish){
   return `${hours?hours+" hour"+(hours===1?"":"s"):""}${hours&&mins?" ":""}${mins?mins+" minutes":""}`||"0 minutes";
 }
 function practical(){
-  view().innerHTML=`<section class="card"><span class="eyebrow">PRACTICAL ASSESSMENT</span><h2>Practical Marking</h2><p>The learner completes the self-mark first. The assessor can then mark the same wall and the PDF will compare both sets of judgements.</p><label>Task<select id="practicalTask">${practicalTasks.map((t,i)=>`<option value="${i}">${t.name}</option>`).join("")}</select></label></section><section id="practicalForm">
-      <section class="card">
-        <h3>Assessor Signature</h3>
-        <div class="signature-wrap">
-          <canvas id="assessorSignaturePad" class="signature-pad"></canvas>
-          <div class="button-row">
-            <button class="secondary" id="clearAssessorSignature">Clear signature</button>
-          </div>
-        </div>
-      </section>
-</section>`;
+  view().innerHTML=`<section class="card"><span class="eyebrow">PRACTICAL ASSESSMENT</span><h2>Practical Marking</h2><p>The learner completes the self-mark first. The assessor can then mark the same wall and the PDF will compare both sets of judgements.</p><label>Task<select id="practicalTask">${practicalTasks.map((t,i)=>`<option value="${i}">${t.name}</option>`).join("")}</select></label></section><section id="practicalForm"></section>`;
   const draw=()=>{
     const task=practicalTasks[Number(document.getElementById("practicalTask").value)];
     const record=state.practical[task.name]||{criteria:{},assessorCriteria:{}};
@@ -1426,6 +1429,11 @@ function practical(){
           </div>
           <div class="criteria">${task.criteria.map(c=>`<label>${c}<select data-assessor-criterion="${c}">${["","Excellent","Good","Needs improvement","Not checked"].map(v=>`<option ${record.assessorCriteria?.[c]===v?"selected":""}>${v}</option>`).join("")}</select></label>`).join("")}</div>
           <label>Assessor feedback<textarea id="assessorComments">${record.assessorComments||""}</textarea></label>
+          <div class="signature-wrap">
+            <b>Assessor signature</b>
+            <canvas id="assessorSignaturePad" class="signature-pad"></canvas>
+            <button type="button" class="secondary" id="clearAssessorSignature">Clear signature</button>
+          </div>
         </section>
       </div>
       <div class="comparison-preview" id="comparisonPreview"></div>
@@ -1442,12 +1450,71 @@ function practical(){
     document.getElementById("timeStarted").oninput=updateTime;document.getElementById("timeFinished").oninput=updateTime;
     document.querySelectorAll("[data-learner-criterion],[data-assessor-criterion]").forEach(s=>s.onchange=drawComparison);
     updateTime();drawComparison();
+    const assessorSignaturePad=document.getElementById("assessorSignaturePad");
+    if(assessorSignaturePad){
+      const ctx=assessorSignaturePad.getContext("2d");
+      const width=assessorSignaturePad.clientWidth||600;
+      const height=170;
+      const ratio=Math.max(window.devicePixelRatio||1,1);
+      assessorSignaturePad.width=width*ratio;
+      assessorSignaturePad.height=height*ratio;
+      ctx.scale(ratio,ratio);
+      ctx.lineWidth=2;
+      ctx.lineCap="round";
+      ctx.strokeStyle="#202630";
+
+      if(record.assessorSignature){
+        const savedSignature=new Image();
+        savedSignature.onload=()=>ctx.drawImage(savedSignature,0,0,width,height);
+        savedSignature.src=record.assessorSignature;
+      }
+
+      let drawing=false;
+      const point=e=>{
+        const rect=assessorSignaturePad.getBoundingClientRect();
+        const source=e.touches?.[0]||e;
+        return {x:source.clientX-rect.left,y:source.clientY-rect.top};
+      };
+      const begin=e=>{
+        drawing=true;
+        const p=point(e);
+        ctx.beginPath();
+        ctx.moveTo(p.x,p.y);
+        e.preventDefault();
+      };
+      const move=e=>{
+        if(!drawing)return;
+        const p=point(e);
+        ctx.lineTo(p.x,p.y);
+        ctx.stroke();
+        e.preventDefault();
+      };
+      const finish=e=>{
+        if(!drawing)return;
+        drawing=false;
+        record.assessorSignature=assessorSignaturePad.toDataURL("image/png");
+        e?.preventDefault?.();
+      };
+
+      assessorSignaturePad.addEventListener("pointerdown",begin);
+      assessorSignaturePad.addEventListener("pointermove",move);
+      assessorSignaturePad.addEventListener("pointerup",finish);
+      assessorSignaturePad.addEventListener("pointerleave",finish);
+      assessorSignaturePad.addEventListener("touchstart",begin,{passive:false});
+      assessorSignaturePad.addEventListener("touchmove",move,{passive:false});
+      assessorSignaturePad.addEventListener("touchend",finish,{passive:false});
+
+      document.getElementById("clearAssessorSignature").onclick=()=>{
+        ctx.clearRect(0,0,width,height);
+        record.assessorSignature="";
+      };
+    }
     document.getElementById("savePractical").onclick=async()=>{
       const criteria={};document.querySelectorAll("[data-learner-criterion]").forEach(s=>criteria[s.dataset.learnerCriterion]=s.value);
       const assessorCriteria={};document.querySelectorAll("[data-assessor-criterion]").forEach(s=>assessorCriteria[s.dataset.assessorCriterion]=s.value);
       let imageKey=record.imageKey||"";const file=document.getElementById("practicalPhoto").files[0]||document.getElementById("practicalCamera").files[0];if(file){imageKey=`practical-${Date.now()}`;await putImage(imageKey,await resizeImage(file))}
       const timeStarted=document.getElementById("timeStarted").value,timeFinished=document.getElementById("timeFinished").value,timeTaken=calculateDuration(timeStarted,timeFinished);
-      const saved={criteria,assessorCriteria,timeStarted,timeFinished,timeTaken,customTaskDescription:task.name==="Other"?(document.getElementById("otherPracticalName")?.value.trim()||"Other practical task"):"",reflection:document.getElementById("practicalReflection").value.trim(),assessorName:document.getElementById("assessorName").value.trim(),assessorDate:document.getElementById("assessorDate").value,assessorComments:document.getElementById("assessorComments").value.trim(),imageKey,score:scoreOf(criteria),assessorScore:scoreOf(assessorCriteria),date:new Date().toISOString()};
+      const saved={criteria,assessorCriteria,timeStarted,timeFinished,timeTaken,customTaskDescription:task.name==="Other"?(document.getElementById("otherPracticalName")?.value.trim()||"Other practical task"):"",reflection:document.getElementById("practicalReflection").value.trim(),assessorName:document.getElementById("assessorName").value.trim(),assessorDate:document.getElementById("assessorDate").value,assessorComments:document.getElementById("assessorComments").value.trim(),assessorSignature:record.assessorSignature||"",imageKey,score:scoreOf(criteria),assessorScore:scoreOf(assessorCriteria),date:new Date().toISOString()};
       state.practical[task.name]=saved;state.documents.unshift({id:`practical-${Date.now()}`,type:"Practical Comparison Assessment",title:task.name,date:new Date().toISOString(),taskName:task.name});saveState(state);
       await downloadPracticalPdf(task.name,saved,improvementGuidance,state.profile);
     };
@@ -1704,7 +1771,7 @@ function settings(){
       <button class="primary" id="saveProfile">Save settings</button>
       <button class="secondary" id="backup">Export backup</button>
     </div>
-    <p class="muted" style="text-align:center;margin-top:18px">Brick Buddy • Version 2.0.9</p>
+    <p class="muted" style="text-align:center;margin-top:18px">Brick Buddy • Version 2.0.10</p>
   </section>`;
   const getSignature=setupSignaturePad(
     document.getElementById("learnerSignature"),
