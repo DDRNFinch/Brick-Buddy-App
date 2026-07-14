@@ -1164,6 +1164,7 @@ function addSubpageBackButton(){
   container.prepend(bar);
 }
 function setRoute(name){
+  if(name==="evidence" && routeName!=="evidence")openAssignmentId=null;
   routeName=name;
   render();
 }
@@ -1712,6 +1713,18 @@ function home(){
   document.getElementById("homeInstallButton")?.addEventListener("click",requestInstall);
 }
 
+let openAssignmentId=null;
+
+function refreshEvidenceKeepingPlace(id,scrollY=window.scrollY){
+  openAssignmentId=Number(id);
+  evidence();
+  requestAnimationFrame(()=>{
+    const details=view().querySelector(`details[data-assignment-id="${openAssignmentId}"]`);
+    if(details)details.open=true;
+    window.scrollTo(0,scrollY);
+  });
+}
+
 function evidence(){
   const complete=assignments.filter(a=>assignmentStatus(a,state.evidence[a.id]).complete).length;
   view().innerHTML=`<section class="card sticky-progress">
@@ -1721,7 +1734,7 @@ function evidence(){
   ${assignments.map(a=>{
     const ev=state.evidence[a.id]||{photos:{},answers:{}};
     const status=assignmentStatus(a,ev);
-    return `<details class="card assignment">
+    return `<details class="card assignment" data-assignment-id="${a.id}" ${openAssignmentId===a.id?"open":""}>
       <summary><span class="number ${status.complete?"status-complete":(status.hasAny?"status-some":"status-none")}">${a.id}</span><span><b>${a.title}</b><small>${status.photosDone}/3 photos • ${status.complete?"Ready":"In progress"}</small></span></summary>
       <div class="grid">
         <label>Learner name<input value="${state.profile.learner||"Not set"}" disabled></label>
@@ -1772,6 +1785,13 @@ function evidence(){
     </details>`;
   }).join("")}`;
 
+  view().querySelectorAll("details[data-assignment-id]").forEach(details=>{
+    details.addEventListener("toggle",()=>{
+      if(details.open)openAssignmentId=Number(details.dataset.assignmentId);
+      else if(openAssignmentId===Number(details.dataset.assignmentId))openAssignmentId=null;
+    });
+  });
+
   view().querySelectorAll("[data-image]").forEach(input=>input.onchange=async()=>{
     const [id,index]=input.dataset.image.split("-").map(Number);
     const file=input.files[0]; if(!file)return;
@@ -1783,7 +1803,7 @@ function evidence(){
     state.evidence[id].photos[index].imageKey=key;
     state.lastAssignment=id;
     saveState(state);
-    evidence();
+    refreshEvidenceKeepingPlace(id);
   });
 
   view().querySelectorAll("[data-add-extra]").forEach(btn=>btn.onclick=()=>{
@@ -1794,7 +1814,7 @@ function evidence(){
       state.evidence[id].additionalPhotos.push({});
       state.lastAssignment=id;
       saveState(state);
-      evidence();
+      refreshEvidenceKeepingPlace(id);
     }
   });
 
@@ -1810,7 +1830,7 @@ function evidence(){
     state.evidence[id].additionalPhotos[index].imageKey=key;
     state.lastAssignment=id;
     saveState(state);
-    evidence();
+    refreshEvidenceKeepingPlace(id);
   });
 
   view().querySelectorAll("[data-remove-extra]").forEach(btn=>btn.onclick=async()=>{
@@ -1821,7 +1841,7 @@ function evidence(){
     }
     state.evidence[id].additionalPhotos.splice(index,1);
     saveState(state);
-    evidence();
+    refreshEvidenceKeepingPlace(id);
   });
 
   view().querySelectorAll("[data-explanation]").forEach(box=>{
@@ -1864,7 +1884,9 @@ function evidence(){
       ev.answers ||= {};
       ev.answers[i]=view().querySelector(`[data-answer="${id}-${i}"]`)?.value.trim()||ev.answers[i]||"";
     });
-    state.lastAssignment=id;saveState(state);evidence();
+    state.lastAssignment=id;
+    saveState(state);
+    refreshEvidenceKeepingPlace(id);
   });
 
   view().querySelectorAll("[data-pdf]").forEach(btn=>btn.onclick=async()=>{
@@ -2315,7 +2337,7 @@ function settings(){
       <button class="primary" id="saveProfile">Save settings</button>
       <button class="secondary" id="backup">Export backup</button>
     </div>
-    <p class="muted" style="text-align:center;margin-top:18px">Brick Buddy • Version 2.2.0</p>
+    <p class="muted" style="text-align:center;margin-top:18px">Brick Buddy • Version 2.2.1</p>
   </section>`;
   const getSignature=setupSignaturePad(
     document.getElementById("learnerSignature"),
