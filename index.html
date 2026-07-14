@@ -1236,117 +1236,449 @@ function revision(){
 }
 
 
+
 const epaPracticalCriteria=[
-  "Health, safety and PPE",
-  "Interpretation of drawings and specification",
-  "Setting out and dimensions",
-  "Selection and preparation of materials",
-  "Bond and construction sequence",
-  "Line, level, plumb and gauge",
-  "Joint finish and presentation",
-  "Quality checks and defect correction",
-  "Time management and organisation",
-  "Professional behaviour and communication"
+  {
+    name:"Health, safety and PPE",
+    nearly:"Revisit hazard identification, PPE selection and safe working procedures. Explain why each control is required before starting work.",
+    practice:"Complete a pre-start safety check and talk through the relevant RAMS with your assessor.",
+    revision:"Revision → Assignment Quizzes → Assignment 1; Revision → Revision Cards → Health and Safety"
+  },
+  {
+    name:"Interpretation of drawings and specification",
+    nearly:"Practise locating dimensions, materials, bond details and tolerances on drawings before starting work.",
+    practice:"Set out a small wall directly from a drawing and check each dimension with a tape measure.",
+    revision:"Revision → Assignment Quizzes → Assignment 1; Revision → Revision Cards → Drawings and Specifications"
+  },
+  {
+    name:"Setting out and dimensions",
+    nearly:"Improve accuracy by checking overall length, returns and openings with a tape measure before laying and during construction.",
+    practice:"Set out a wall, check the dimensions twice and explain how errors would affect the finished work.",
+    revision:"Revision → Assignment Quizzes → Assignment 1 and 2; Revision → Revision Cards → Setting Out"
+  },
+  {
+    name:"Selection and preparation of materials",
+    nearly:"Review how bricks, blocks, mortar and ancillary materials are selected, checked and prepared for the task.",
+    practice:"Prepare materials for a practical task and explain how you checked suitability and condition.",
+    revision:"Revision → Assignment Quizzes → Assignment 1; Revision → Revision Cards → Materials and Mortar"
+  },
+  {
+    name:"Bond and construction sequence",
+    nearly:"Revise how the selected bond is maintained through corners, returns and junctions without creating continuous perp joints.",
+    practice:"Build a short section containing a corner or return and check the bond before continuing each course.",
+    revision:"Revision → Assignment Quizzes → Assignment 2 and 3; Revision → Revision Cards → Brick Bonds"
+  },
+  {
+    name:"Line, level, plumb and gauge",
+    nearly:"Check line, level, plumb and course heights more frequently. Use a tape measure to monitor height and dimensions as the work progresses.",
+    practice:"Build a six-course wall and record checks for line, level, plumb and overall height.",
+    revision:"Revision → Assignment Quizzes → Assignment 1 and 2; Revision → Revision Cards → Quality Checks"
+  },
+  {
+    name:"Joint finish and presentation",
+    nearly:"Focus on consistent bed and perp joints, correct timing of jointing and keeping the facework clean.",
+    practice:"Complete a sample panel and compare the joint finish across the full wall.",
+    revision:"Revision → Assignment Quizzes → Assignment 1; Revision → Revision Cards → Joint Finishes"
+  },
+  {
+    name:"Quality checks and defect correction",
+    nearly:"Carry out checks throughout the build rather than waiting until the end, and correct small defects before they become larger.",
+    practice:"Inspect a completed wall, identify defects and explain the safest correction method.",
+    revision:"Revision → Assignment Quizzes → Assignment 19; Revision → Revision Cards → Quality and Repairs"
+  },
+  {
+    name:"Time management and organisation",
+    nearly:"Plan the work sequence, prepare tools and materials in advance and maintain a steady pace without reducing quality.",
+    practice:"Plan a practical task into stages and compare planned time with actual completion time.",
+    revision:"Revision → Revision Cards → Planning and Organisation"
+  },
+  {
+    name:"Professional behaviour and communication",
+    nearly:"Practise explaining decisions clearly, asking for clarification when required and maintaining a professional work area.",
+    practice:"Talk through a task with your assessor before starting and explain any changes made during the build.",
+    revision:"Revision → Revision Cards → Communication and Professional Behaviour"
+  }
 ];
-const epaDiscussionTopics=[
-  "Health and safety responsibilities",
-  "Planning and preparing bricklaying work",
-  "Materials, mortar and sustainability",
-  "Drawings, specifications and tolerances",
-  "Solid and cavity wall construction",
-  "Openings, DPCs, wall ties and insulation",
-  "Quality assurance and defect correction",
-  "Communication, teamwork and customer needs",
-  "Problem solving and lessons learned",
-  "Professional development and behaviours"
+
+const epaDiscussionQuestions=[
+  {
+    q:"You arrive on site and are told that the RAMS have been updated since your previous shift. What would you do before starting work, and why?",
+    assignment:"Assignment 1",
+    topic:"Health and Safety",
+    workplace:"Review a current RAMS document with your supervisor and explain the control measures.",
+    revision:"Revision → Assignment Quizzes → Assignment 1; Revision → Revision Cards → Health and Safety"
+  },
+  {
+    q:"You are preparing to build a wall, but the dimensions marked on site do not match the drawing. What actions would you take before continuing?",
+    assignment:"Assignment 1",
+    topic:"Drawings and Setting Out",
+    workplace:"Practise comparing site dimensions with a drawing and checking them using a tape measure.",
+    revision:"Revision → Assignment Quizzes → Assignment 1; Revision → Revision Cards → Drawings and Specifications"
+  },
+  {
+    q:"While constructing a straight wall, you notice the course height is increasing unevenly. How would you identify the cause and correct it?",
+    assignment:"Assignment 1",
+    topic:"Gauge and Quality",
+    workplace:"Build a short wall and record course heights using a tape measure.",
+    revision:"Revision → Assignment Quizzes → Assignment 1; Revision → Revision Cards → Quality Checks"
+  },
+  {
+    q:"You are building a stretcher bond corner and notice that the bond will create a continuous vertical joint. What would you do?",
+    assignment:"Assignment 2",
+    topic:"Corners and Bond",
+    workplace:"Build or dry-bond a corner and explain how bond continuity is maintained.",
+    revision:"Revision → Assignment Quizzes → Assignment 2; Revision → Revision Cards → Brick Bonds"
+  },
+  {
+    q:"A return wall is not square to the main wall after the first few courses. How would you check the problem and put it right?",
+    assignment:"Assignment 3",
+    topic:"Returns and Setting Out",
+    workplace:"Practise checking a return using a tape measure, square and spirit level.",
+    revision:"Revision → Assignment Quizzes → Assignment 3; Revision → Revision Cards → Setting Out"
+  },
+  {
+    q:"You are asked to build a block wall using materials that have been stored outside in poor conditions. What checks would you make before using them?",
+    assignment:"Assignment 4",
+    topic:"Blockwork and Materials",
+    workplace:"Inspect stored blocks and discuss how damaged or unsuitable materials should be handled.",
+    revision:"Revision → Assignment Quizzes → Assignment 4; Revision → Revision Cards → Materials"
+  },
+  {
+    q:"During blockwork construction, the wall begins to move as more courses are added. What could have caused this and what would you do?",
+    assignment:"Assignment 5",
+    topic:"Blockwork Quality",
+    workplace:"Practise building a short block wall while checking stability, level and plumb regularly.",
+    revision:"Revision → Assignment Quizzes → Assignment 5; Revision → Revision Cards → Blockwork"
+  },
+  {
+    q:"You are constructing a cavity wall and mortar droppings are collecting in the cavity. Why is this a concern and how would you manage it?",
+    assignment:"Assignment 6",
+    topic:"Cavity Walls",
+    workplace:"Observe cavity construction and demonstrate how the cavity is kept clear.",
+    revision:"Revision → Assignment Quizzes → Assignment 6; Revision → Revision Cards → Cavity Construction"
+  },
+  {
+    q:"While installing wall ties, you notice that the spacing does not match the drawing or specification. What should happen next?",
+    assignment:"Assignment 7",
+    topic:"Wall Ties",
+    workplace:"Check wall tie spacing on a training wall against a drawing or specification.",
+    revision:"Revision → Assignment Quizzes → Assignment 7; Revision → Revision Cards → Wall Ties"
+  },
+  {
+    q:"A DPC has been damaged before the next course is laid. What risks could this create and how would you deal with it?",
+    assignment:"Assignment 8",
+    topic:"DPC and Moisture",
+    workplace:"Inspect DPC installation and discuss common causes of damage and bridging.",
+    revision:"Revision → Assignment Quizzes → Assignment 8; Revision → Revision Cards → Damp Prevention"
+  },
+  {
+    q:"You are forming an opening and the lintel bearing shown on site appears insufficient. What would you do before continuing?",
+    assignment:"Assignment 9",
+    topic:"Openings and Lintels",
+    workplace:"Review a lintel installation drawing and identify bearing, level and support requirements.",
+    revision:"Revision → Assignment Quizzes → Assignment 9; Revision → Revision Cards → Openings and Lintels"
+  },
+  {
+    q:"While building around an opening, you notice the reveals are not plumb and the opening is becoming narrower. How would you correct this?",
+    assignment:"Assignment 10",
+    topic:"Openings and Accuracy",
+    workplace:"Set out and check a small opening using a tape measure and spirit level.",
+    revision:"Revision → Assignment Quizzes → Assignment 10; Revision → Revision Cards → Openings"
+  },
+  {
+    q:"A soldier course begins to move before the mortar has gained enough strength. What could have caused this and what action would you take?",
+    assignment:"Assignment 11",
+    topic:"Decorative Brickwork",
+    workplace:"Practise setting out and supporting a small soldier course.",
+    revision:"Revision → Assignment Quizzes → Assignment 11; Revision → Revision Cards → Decorative Brickwork"
+  },
+  {
+    q:"You are constructing an arch and the temporary support appears unstable. What should you do and what checks are required?",
+    assignment:"Assignment 12",
+    topic:"Arches and Temporary Support",
+    workplace:"Inspect arch centring and discuss how it is checked before loading.",
+    revision:"Revision → Assignment Quizzes → Assignment 12; Revision → Revision Cards → Arches"
+  },
+  {
+    q:"A long wall has been built without the movement joint shown on the drawing. What problems could occur and how should the issue be managed?",
+    assignment:"Assignment 13",
+    topic:"Movement Joints",
+    workplace:"Identify movement joints on drawings and inspect how they are formed on site.",
+    revision:"Revision → Assignment Quizzes → Assignment 13; Revision → Revision Cards → Movement Joints"
+  },
+  {
+    q:"You discover cracking around part of an existing wall before starting repair work. What would you consider before removing any bricks?",
+    assignment:"Assignment 14",
+    topic:"Defects and Repairs",
+    workplace:"Inspect a damaged wall and discuss possible causes before selecting a repair method.",
+    revision:"Revision → Assignment Quizzes → Assignment 14; Revision → Revision Cards → Defects and Repairs"
+  },
+  {
+    q:"A replacement brick does not match the size and appearance of the existing wall. What would you do before completing the repair?",
+    assignment:"Assignment 15",
+    topic:"Brick Replacement",
+    workplace:"Compare replacement materials with existing masonry and discuss acceptable matching.",
+    revision:"Revision → Assignment Quizzes → Assignment 15; Revision → Revision Cards → Repair Work"
+  },
+  {
+    q:"The mortar is becoming difficult to use and may have exceeded its working time. How would you decide whether it can still be used?",
+    assignment:"Assignment 16",
+    topic:"Mortar",
+    workplace:"Discuss mortar working time and manufacturer guidance with your supervisor.",
+    revision:"Revision → Assignment Quizzes → Assignment 16; Revision → Revision Cards → Mortar"
+  },
+  {
+    q:"Another trade has blocked your access route and placed materials against your completed brickwork. How would you deal with the situation?",
+    assignment:"Assignment 17",
+    topic:"Communication and Protection",
+    workplace:"Discuss protection of completed work and coordination with other trades.",
+    revision:"Revision → Assignment Quizzes → Assignment 17; Revision → Revision Cards → Communication"
+  },
+  {
+    q:"At the end of the task, your wall is within the required dimensions but the joint finish is inconsistent. How would you assess the work and improve the result?",
+    assignment:"Assignment 20",
+    topic:"Final Quality and Review",
+    workplace:"Complete a final inspection of a wall and record strengths, defects and corrective actions.",
+    revision:"Revision → Assignment Quizzes → Assignment 20; Revision → Revision Cards → Quality Assurance"
+  }
 ];
-function mockScore(values){
-  const points={"Excellent":3,"Achieved":2,"Developing":1,"Not demonstrated":0};
-  const scores=values.map(v=>points[v]??0);
-  return scores.length?Math.round(scores.reduce((a,b)=>a+b,0)/(scores.length*3)*100):0;
+
+function mockJudgementSummary(values){
+  const list=Object.values(values||{});
+  if(!list.length)return "Not Assessed";
+  const ready=list.filter(v=>v==="EPA Ready").length;
+  const nearly=list.filter(v=>v==="Nearly Ready").length;
+  const more=list.filter(v=>v==="More Practice Required").length;
+  if(more>0)return "More Practice Required";
+  if(nearly>0)return "Nearly Ready";
+  return ready===list.length?"EPA Ready":"Not Assessed";
 }
-function mockReadiness(score){
-  return score>=85?"EPA Ready":score>=70?"Nearly Ready":score>=55?"Developing":"Further Practice Required";
+
+function initialiseSignaturePad(canvas,saved,onSave){
+  if(!canvas)return;
+  const ctx=canvas.getContext("2d");
+  const width=canvas.clientWidth||600,height=170,ratio=Math.max(window.devicePixelRatio||1,1);
+  canvas.width=width*ratio;
+  canvas.height=height*ratio;
+  ctx.scale(ratio,ratio);
+  ctx.lineWidth=2;
+  ctx.lineCap="round";
+  ctx.strokeStyle="#202630";
+  if(saved){
+    const img=new Image();
+    img.onload=()=>ctx.drawImage(img,0,0,width,height);
+    img.src=saved;
+  }
+  let drawing=false;
+  const point=e=>{
+    const r=canvas.getBoundingClientRect();
+    const p=e.touches?.[0]||e;
+    return {x:p.clientX-r.left,y:p.clientY-r.top};
+  };
+  const begin=e=>{drawing=true;const p=point(e);ctx.beginPath();ctx.moveTo(p.x,p.y);e.preventDefault();};
+  const move=e=>{if(!drawing)return;const p=point(e);ctx.lineTo(p.x,p.y);ctx.stroke();e.preventDefault();};
+  const finish=e=>{if(!drawing)return;drawing=false;onSave(canvas.toDataURL("image/png"));e?.preventDefault?.();};
+  canvas.addEventListener("pointerdown",begin);
+  canvas.addEventListener("pointermove",move);
+  canvas.addEventListener("pointerup",finish);
+  canvas.addEventListener("pointerleave",finish);
+  canvas.addEventListener("touchstart",begin,{passive:false});
+  canvas.addEventListener("touchmove",move,{passive:false});
+  canvas.addEventListener("touchend",finish,{passive:false});
+  return ()=>ctx.clearRect(0,0,width,height);
 }
-async function downloadMockPdf(kind,title,learnerValues,assessorValues,comments,profile){
+
+async function downloadEpaPracticalMockPdf(record,profile){
   const {jsPDF}=window.jspdf;
   const pdf=new jsPDF({unit:"mm",format:"a4"});
-  addHeader(pdf,title,kind);
+  const margin=14,contentW=182,pageH=297;
+  const header=()=>addHeader(pdf,"EPA Practical Mock","Assessor Mark Sheet");
+  header();
   let y=40;
-  y=detailBox(pdf,[["Learner",profile.learner||"Not entered"],["Assessor",profile.assessor||"Not entered"],["Date",pdfUkDate()],["Course",profile.course||"Bricklayer Level 2"]],y);
-  const learnerScore=mockScore(Object.values(learnerValues));
-  const assessorScore=mockScore(Object.values(assessorValues));
-  y=sectionTitle(pdf,"Readiness Summary",y);
-  pdf.setFont("helvetica","bold");pdf.setFontSize(11);
-  pdf.text(`Learner self-mark: ${learnerScore}% — ${mockReadiness(learnerScore)}`,15,y);
-  pdf.text(`Assessor mark: ${assessorScore}% — ${mockReadiness(assessorScore)}`,15,y+7);
-  y+=17;
-  y=sectionTitle(pdf,"Assessment Record",y);
-  const names=Object.keys(learnerValues);
-  names.forEach((name,i)=>{
-    const lines=pdf.splitTextToSize(`${i+1}. ${name}`,90);
-    const rowH=Math.max(10,lines.length*4+4);
-    if(y+rowH>275){pdf.addPage();addHeader(pdf,title,kind);y=40}
-    pdf.setFillColor(i%2?245:238,i%2?247:241,i%2?249:244);
-    pdf.roundedRect(15,y-3,180,rowH,1.5,1.5,"F");
+  y=detailBox(pdf,[
+    ["Learner",record.learnerName||profile.learner||"Not entered"],
+    ["Assessor",record.assessorName||profile.assessor||"Not entered"],
+    ["Date",record.date?pdfUkDate(record.date+"T12:00:00"):pdfUkDate()],
+    ["Practical task",record.task||"Not entered"]
+  ],y);
+  y=sectionTitle(pdf,"Overall Judgement",y);
+  pdf.setFont("helvetica","bold");pdf.setFontSize(12);
+  pdf.text(mockJudgementSummary(record.marks),margin,y);y+=10;
+
+  epaPracticalCriteria.forEach((criterion,index)=>{
+    const mark=record.marks?.[criterion.name]||"Not assessed";
+    const needs=mark==="Nearly Ready"||mark==="More Practice Required";
+    const blockLines=[
+      `${index+1}. ${criterion.name}`,
+      `Assessor judgement: ${mark}`
+    ];
+    if(needs){
+      blockLines.push(
+        `Improvement guidance: ${mark==="Nearly Ready" ? criterion.nearly : "This area requires further development before EPA. "+criterion.nearly}`,
+        `Brick Buddy revision: ${criterion.revision}`,
+        `Suggested practice: ${criterion.practice}`
+      );
+    }
+    const lines=pdf.splitTextToSize(blockLines.join("\n"),contentW-8);
+    const h=lines.length*4+8;
+    if(y+h>274){pdf.addPage();header();y=40}
+    pdf.setFillColor(index%2?247:239,index%2?248:242,index%2?250:245);
+    pdf.roundedRect(margin,y-3,contentW,h,2,2,"F");
     pdf.setFont("helvetica","normal");pdf.setFontSize(8);
-    pdf.text(lines,18,y+2);
-    pdf.setFont("helvetica","bold");
-    pdf.text(`Learner: ${learnerValues[name]||"Not marked"}`,112,y+2);
-    pdf.text(`Assessor: ${assessorValues[name]||"Not marked"}`,112,y+7);
-    y+=rowH+2;
+    pdf.text(lines,margin+4,y+2);y+=h+3;
   });
-  if(comments){
-    const lines=pdf.splitTextToSize(comments,180);
-    if(y+lines.length*4+15>275){pdf.addPage();addHeader(pdf,title,kind);y=40}
-    y=sectionTitle(pdf,"Assessor Feedback and Actions",y);
+
+  if(record.comments){
+    const lines=pdf.splitTextToSize(record.comments,contentW);
+    if(y+lines.length*4+15>274){pdf.addPage();header();y=40}
+    y=sectionTitle(pdf,"Assessor Feedback and Next Actions",y);
     pdf.setFont("helvetica","normal");pdf.setFontSize(8.5);
-    pdf.text(lines,15,y);
+    pdf.text(lines,margin,y);y+=lines.length*4+8;
+  }
+
+  if(record.signature){
+    if(y+28>274){pdf.addPage();header();y=40}
+    y=sectionTitle(pdf,"Assessor Signature",y);
+    pdf.addImage(record.signature,"PNG",margin,y,48,15);
+    y+=19;
+    pdf.setFont("helvetica","normal");pdf.setFontSize(8);
+    pdf.text(`Signed by: ${record.assessorName||profile.assessor||"Assessor"}`,margin,y);
+    pdf.text(`Date: ${record.date?pdfUkDate(record.date+"T12:00:00"):pdfUkDate()}`,120,y);
   }
   addFooter(pdf);
-  pdf.save(`${safe(title)}.pdf`);
+  pdf.save("EPA-Practical-Mock.pdf");
 }
-function renderMockSheet(config){
-  const saved=state[config.stateKey]||{learner:{},assessor:{},comments:""};
-  const options=["","Excellent","Achieved","Developing","Not demonstrated"];
-  view().innerHTML=`<section class="card hero"><span class="eyebrow">${config.eyebrow}</span><h2>${config.icon} ${config.title}</h2><p>${config.description}</p></section>
-  <section class="card"><h3>Learner Self-Mark</h3><div class="criteria">${config.criteria.map(c=>`<label>${c}<select data-mock-learner="${c}">${options.map(v=>`<option ${saved.learner?.[c]===v?"selected":""}>${v}</option>`).join("")}</select></label>`).join("")}</div></section>
-  <section class="card"><h3>Assessor Mark</h3><div class="criteria">${config.criteria.map(c=>`<label>${c}<select data-mock-assessor="${c}">${options.map(v=>`<option ${saved.assessor?.[c]===v?"selected":""}>${v}</option>`).join("")}</select></label>`).join("")}</div>
-  <label>Assessor feedback, evidence discussed and next actions<textarea id="mockComments">${saved.comments||""}</textarea></label></section>
-  <section class="card"><div class="button-row"><button class="secondary" id="saveMockSheet">Save Mark Sheet</button><button class="primary" id="downloadMockSheet">Download PDF</button></div></section>`;
-  const collect=()=>{
-    const learner={},assessor={};
-    view().querySelectorAll("[data-mock-learner]").forEach(x=>learner[x.dataset.mockLearner]=x.value);
-    view().querySelectorAll("[data-mock-assessor]").forEach(x=>assessor[x.dataset.mockAssessor]=x.value);
-    return {learner,assessor,comments:document.getElementById("mockComments").value.trim(),date:new Date().toISOString()};
-  };
-  document.getElementById("saveMockSheet").onclick=()=>{state[config.stateKey]=collect();saveState(state);alert("Mark sheet saved.")};
-  document.getElementById("downloadMockSheet").onclick=async()=>{
-    const record=collect();state[config.stateKey]=record;saveState(state);
-    await downloadMockPdf(config.pdfKind,config.title,record.learner,record.assessor,record.comments,state.profile);
-  };
+
+async function downloadEpaDiscussionMockPdf(record,profile){
+  const {jsPDF}=window.jspdf;
+  const pdf=new jsPDF({unit:"mm",format:"a4"});
+  const margin=14,contentW=182;
+  const header=()=>addHeader(pdf,"Professional Discussion Mock","Assessor Mark Sheet");
+  header();
+  let y=40;
+  y=detailBox(pdf,[
+    ["Learner",record.learnerName||profile.learner||"Not entered"],
+    ["Assessor",record.assessorName||profile.assessor||"Not entered"],
+    ["Date",record.date?pdfUkDate(record.date+"T12:00:00"):pdfUkDate()],
+    ["Overall judgement",mockJudgementSummary(record.marks)]
+  ],y);
+
+  epaDiscussionQuestions.forEach((item,index)=>{
+    const mark=record.marks?.[index]||"Not assessed";
+    const needs=mark==="Nearly Ready"||mark==="More Practice Required";
+    let feedback="";
+    if(mark==="Nearly Ready"){
+      feedback="You showed a reasonable understanding of this topic, but your explanation would benefit from greater detail, clearer reasoning or stronger examples.";
+    }else if(mark==="More Practice Required"){
+      feedback="This topic requires further revision and discussion before EPA. Focus on understanding the principles as well as how they apply in the workplace.";
+    }
+    const linesArr=[
+      `${index+1}. ${item.q}`,
+      `Assessor judgement: ${mark}`
+    ];
+    if(needs){
+      linesArr.push(
+        `Feedback: ${feedback}`,
+        `Brick Buddy revision: ${item.revision}`,
+        `Suggested workplace activity: ${item.workplace}`
+      );
+    }
+    const lines=pdf.splitTextToSize(linesArr.join("\n"),contentW-8);
+    const h=lines.length*4+8;
+    if(y+h>274){pdf.addPage();header();y=40}
+    pdf.setFillColor(index%2?247:239,index%2?248:242,index%2?250:245);
+    pdf.roundedRect(margin,y-3,contentW,h,2,2,"F");
+    pdf.setFont("helvetica","normal");pdf.setFontSize(8);
+    pdf.text(lines,margin+4,y+2);y+=h+3;
+  });
+
+  if(record.comments){
+    const lines=pdf.splitTextToSize(record.comments,contentW);
+    if(y+lines.length*4+15>274){pdf.addPage();header();y=40}
+    y=sectionTitle(pdf,"Assessor Feedback and Priority Revision",y);
+    pdf.setFont("helvetica","normal");pdf.setFontSize(8.5);
+    pdf.text(lines,margin,y);y+=lines.length*4+8;
+  }
+
+  if(record.signature){
+    if(y+28>274){pdf.addPage();header();y=40}
+    y=sectionTitle(pdf,"Assessor Signature",y);
+    pdf.addImage(record.signature,"PNG",margin,y,48,15);
+    y+=19;
+    pdf.setFont("helvetica","normal");pdf.setFontSize(8);
+    pdf.text(`Signed by: ${record.assessorName||profile.assessor||"Assessor"}`,margin,y);
+    pdf.text(`Date: ${record.date?pdfUkDate(record.date+"T12:00:00"):pdfUkDate()}`,120,y);
+  }
+  addFooter(pdf);
+  pdf.save("Professional-Discussion-Mock.pdf");
 }
+
 function epaPracticalMock(){
-  renderMockSheet({
-    stateKey:"epaPracticalMock",
-    title:"EPA Practical Mock",
-    icon:"🧱",
-    eyebrow:"PRACTICAL READINESS",
-    description:"The learner completes a self-mark and the assessor records an independent judgement against the practical criteria.",
-    criteria:epaPracticalCriteria,
-    pdfKind:"Learner and Assessor Practical Mock Mark Sheet"
-  });
+  const record=state.epaPracticalMock||{marks:{},comments:"",learnerName:state.profile.learner||"",assessorName:state.profile.assessor||"",date:new Date().toISOString().slice(0,10),task:"",signature:""};
+  const options=["","EPA Ready","Nearly Ready","More Practice Required"];
+  view().innerHTML=`<section class="card hero"><span class="eyebrow">PRACTICAL READINESS</span><h2>🧱 EPA Practical Mock</h2><p>Assessor-only mock assessment with automatic improvement guidance.</p></section>
+  <section class="card"><div class="grid">
+    <label>Learner name<input id="epaPracticalLearner" value="${record.learnerName||""}"></label>
+    <label>Assessor name<input id="epaPracticalAssessor" value="${record.assessorName||""}"></label>
+    <label>Date<input id="epaPracticalDate" type="date" value="${record.date||new Date().toISOString().slice(0,10)}"></label>
+    <label>Practical task<input id="epaPracticalTask" value="${record.task||""}" placeholder="e.g. Construct a cavity wall"></label>
+  </div></section>
+  <section class="card"><h3>Assessor Mark</h3><div class="criteria">${epaPracticalCriteria.map(c=>`<label>${c.name}<select data-epa-practical-mark="${c.name}">${options.map(v=>`<option ${record.marks?.[c.name]===v?"selected":""}>${v}</option>`).join("")}</select></label>`).join("")}</div>
+  <label>Assessor feedback and next actions<textarea id="epaPracticalComments">${record.comments||""}</textarea></label></section>
+  <section class="card"><h3>Assessor Signature</h3><div class="signature-wrap"><canvas id="epaPracticalSignature" class="signature-pad"></canvas><button class="secondary" id="clearEpaPracticalSignature">Clear signature</button></div></section>
+  <section class="card"><div class="button-row"><button class="secondary" id="saveEpaPractical">Save Mark Sheet</button><button class="primary" id="downloadEpaPractical">Download PDF</button></div></section>`;
+
+  let signature=record.signature||"";
+  const clear=initialiseSignaturePad(document.getElementById("epaPracticalSignature"),signature,v=>signature=v);
+  document.getElementById("clearEpaPracticalSignature").onclick=()=>{clear?.();signature=""};
+
+  const collect=()=>{
+    const marks={};
+    view().querySelectorAll("[data-epa-practical-mark]").forEach(x=>marks[x.dataset.epaPracticalMark]=x.value);
+    return {
+      learnerName:document.getElementById("epaPracticalLearner").value.trim(),
+      assessorName:document.getElementById("epaPracticalAssessor").value.trim(),
+      date:document.getElementById("epaPracticalDate").value,
+      task:document.getElementById("epaPracticalTask").value.trim(),
+      comments:document.getElementById("epaPracticalComments").value.trim(),
+      marks,signature
+    };
+  };
+  document.getElementById("saveEpaPractical").onclick=()=>{state.epaPracticalMock=collect();saveState(state);alert("EPA Practical Mock saved.")};
+  document.getElementById("downloadEpaPractical").onclick=async()=>{const r=collect();state.epaPracticalMock=r;saveState(state);await downloadEpaPracticalMockPdf(r,state.profile)};
 }
+
 function epaDiscussionMock(){
-  renderMockSheet({
-    stateKey:"epaDiscussionMock",
-    title:"Professional Discussion Mock",
-    icon:"💬",
-    eyebrow:"DISCUSSION READINESS",
-    description:"Use this mark sheet to record the learner's confidence, the assessor's judgement, evidence discussed and actions before EPA.",
-    criteria:epaDiscussionTopics,
-    pdfKind:"Professional Discussion Mock Mark Sheet"
-  });
+  const record=state.epaDiscussionMock||{marks:{},comments:"",learnerName:state.profile.learner||"",assessorName:state.profile.assessor||"",date:new Date().toISOString().slice(0,10),signature:""};
+  const options=["","EPA Ready","Nearly Ready","More Practice Required"];
+  view().innerHTML=`<section class="card hero"><span class="eyebrow">DISCUSSION READINESS</span><h2>💬 Professional Discussion Mock</h2><p>Twenty scenario-based open questions aligned to the Brick Buddy assignment topics.</p></section>
+  <section class="card"><div class="grid">
+    <label>Learner name<input id="epaDiscussionLearner" value="${record.learnerName||""}"></label>
+    <label>Assessor name<input id="epaDiscussionAssessor" value="${record.assessorName||""}"></label>
+    <label>Date<input id="epaDiscussionDate" type="date" value="${record.date||new Date().toISOString().slice(0,10)}"></label>
+  </div></section>
+  ${epaDiscussionQuestions.map((item,index)=>`<section class="card"><div class="split"><h3>Question ${index+1}</h3><small>${item.assignment} • ${item.topic}</small></div><p><b>${item.q}</b></p><label>Assessor judgement<select data-epa-discussion-mark="${index}">${options.map(v=>`<option ${record.marks?.[index]===v?"selected":""}>${v}</option>`).join("")}</select></label></section>`).join("")}
+  <section class="card"><label>Overall assessor feedback and priority revision<textarea id="epaDiscussionComments">${record.comments||""}</textarea></label></section>
+  <section class="card"><h3>Assessor Signature</h3><div class="signature-wrap"><canvas id="epaDiscussionSignature" class="signature-pad"></canvas><button class="secondary" id="clearEpaDiscussionSignature">Clear signature</button></div></section>
+  <section class="card"><div class="button-row"><button class="secondary" id="saveEpaDiscussion">Save Mark Sheet</button><button class="primary" id="downloadEpaDiscussion">Download PDF</button></div></section>`;
+
+  let signature=record.signature||"";
+  const clear=initialiseSignaturePad(document.getElementById("epaDiscussionSignature"),signature,v=>signature=v);
+  document.getElementById("clearEpaDiscussionSignature").onclick=()=>{clear?.();signature=""};
+
+  const collect=()=>{
+    const marks={};
+    view().querySelectorAll("[data-epa-discussion-mark]").forEach(x=>marks[x.dataset.epaDiscussionMark]=x.value);
+    return {
+      learnerName:document.getElementById("epaDiscussionLearner").value.trim(),
+      assessorName:document.getElementById("epaDiscussionAssessor").value.trim(),
+      date:document.getElementById("epaDiscussionDate").value,
+      comments:document.getElementById("epaDiscussionComments").value.trim(),
+      marks,signature
+    };
+  };
+  document.getElementById("saveEpaDiscussion").onclick=()=>{state.epaDiscussionMock=collect();saveState(state);alert("Professional Discussion Mock saved.")};
+  document.getElementById("downloadEpaDiscussion").onclick=async()=>{const r=collect();state.epaDiscussionMock=r;saveState(state);await downloadEpaDiscussionMockPdf(r,state.profile)};
 }
 
 function home(){
@@ -1983,7 +2315,7 @@ function settings(){
       <button class="primary" id="saveProfile">Save settings</button>
       <button class="secondary" id="backup">Export backup</button>
     </div>
-    <p class="muted" style="text-align:center;margin-top:18px">Brick Buddy • Version 2.1.0</p>
+    <p class="muted" style="text-align:center;margin-top:18px">Brick Buddy • Version 2.2.0</p>
   </section>`;
   const getSignature=setupSignaturePad(
     document.getElementById("learnerSignature"),
